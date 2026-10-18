@@ -561,7 +561,45 @@ Em agosto de 2026, o FreeBitco.in ainda tinha cerca de **3,8 milhões de visitas
 | O domínio expirou e derrubou o site | **Ação:** registrar o domínio com renovação automática e deixar o vencimento anotado. Custa R$ 40/ano e já derrubou um gigante. |
 | Saque travado matou a reputação | **Ação:** nunca prometer prazo que você não controla; e nunca segurar saldo grande de usuário — limite de saque baixo e processamento automático. |
 
-### 17.5 A verdade final sobre esse caso
+### 17.5 A anatomia do modelo: por que não tinha anúncio
+
+Você notou o sintoma: **2 sats por hora, zero anúncios, zero shortlink, zero offer wall, e um único banner levando pra Binance.** Um site com milhões de visitas não vive de ar. Vivia disto:
+
+| # | Camada | O que era de verdade | Resultado |
+|---|---|---|---|
+| 1 | **Faucet** | **Isca.** 2 sats/hora ≈ **US$ 0,0016** por rolagem [4](https://best-faucets.com/freebitcoin-the-largest-faucet-has-closed-and-gone-offline) | **Negativo.** Custo de compra de tráfego |
+| 2 | **Multiply BTC (Hi-Lo)** | Jogo de azar com **~5% de vantagem matemática da casa** em cada aposta [23](https://read.cash/@Treater98/full-review-of-freebitcoin-bd6f7053) | **O motor.** A maior parte da receita vinha daqui [10](https://suitableinvestmentforyou.blogspot.com/2020/03/how-do-i-earn-compound-interest-on-my-bitcoin-balance.html?m=1) |
+| 3 | **Depósitos a 4,08% a.a.** | **Float.** Eles mesmos explicavam no site: o saldo dos usuários era dividido em três partes — cobrir saques, **bancar o jogo**, e expandir a **mineração própria** deles [10](https://suitableinvestmentforyou.blogspot.com/2020/03/how-do-i-earn-compound-interest-on-my-bitcoin-balance.html?m=1) | Capital de giro de graça, custando 4% ao ano |
+| 4 | **Token FUN** | Eles **compraram 3,75 bilhões de tokens FUN** e passaram a vender para a própria base de 40 milhões de usuários. Premium exigia segurar de 2.500 a 500.000 FUN, travados de 1 a 12 meses [34](https://prfreebitcoin.medium.com/participate-in-freebitco-ins-2-million-fun-token-giveaway-f392cc32cab4), com **taxa de 1% na compra** [28](https://www.publish0x.com/crypto-faucets-how-much-can-you-make/freebitcoin-new-premium-membership-program-xkyeojv) | Travaram 100 milhões de FUN em horas [30](https://beincrypto.com/fun-token-dedicated-savings-program-freebitco-in/). **O FUN caiu ~90%** [1](https://thebitcoinmanual.com/articles/the-fall-of-freebitco-in/) |
+| 5 | **Indicação** | 50% do claim do indicado, 0,25–0,4% das apostas, 25% dos juros — pago pelo site, não descontado do indicado [2](https://medium.com/@ethan_l/freebitco-in-earning-guide-546a66dc0389) | Aquisição de usuários |
+
+**Resposta direta à sua pergunta:** não era *só* com depósito. O depósito era o **combustível** — dinheiro dos outros, custando 4% ao ano, usado para bancar o cassino e a mineração. O **lucro** vinha da vantagem da casa no jogo. O **FUN** foi a extração final: vender, para uma base cativa, um ativo que eles mesmos detinham aos bilhões.
+
+O banner que você via não era anúncio. **Era marketing do próprio estoque deles.**
+
+### 17.6 O que isso muda na sua cabeça (a parte mais importante deste plano)
+
+**1. O faucet nunca foi o produto. Era a boca do funil.**
+Você se apaixonou pela boca do funil e está construindo só ela. O FreeBitco.in dava sats de graça para transformar visita em apostador, e apostador em comprador de token. **A torneira não pagava a conta — ela comprava a pessoa.** Seu modelo (anúncio) é outro, honesto e legal, mas muito mais magro: por isso o plano empurra offer wall.
+
+**2. Juro sobre depósito sacável a qualquer momento = banco sem reserva.**
+Se o dinheiro sai quando o cara pedir e você está pagando 4% ao ano, você está operando um banco. Quando a confiança vira, todo mundo saca junto — e foi exatamente isso que travou em agosto de 2025. **Regra absoluta para o seu projeto: nunca aceite depósito, nunca prometa rendimento.**
+
+**3. Não amarre o pagamento a um número fixo de sats sem revisão.** Olha o que aconteceu com você mesmo:
+
+| | 2016 | 2025 |
+|---|---|---|
+| Pagamento por rolagem | ~2.000 sats | ~2 sats |
+| Preço do BTC | ~US$ 620 | ~US$ 82.000 |
+| **Valor real por rolagem** | **≈ US$ 0,012** | **≈ US$ 0,0016** |
+
+**Você passou a ganhar ~8 vezes menos em dólar por rolagem, enquanto o Bitcoin subiu mais de 100 vezes.** Sats não são dinheiro — são uma fração de um ativo que pode dobrar. Se o BTC dobrar e você pagar 5 sats fixos, **seu custo dobra e sua receita de anúncio não**. Pague em sats, mas revise o valor a cada 90 dias (seção 12).
+
+**4. Pontos ≠ saldo.** Lá, 1 ponto valia 1 satoshi, mas só dava para trocar a partir de **100 mil pontos** [20](https://elspethrooney.github.io/2020/10/27/a_great_review_of_freebitcoin.html). É retenção que vira dívida escondida no balanço. Se você criar pontos, **deixe claro que não são saldo sacável**, e nunca use isso para empurrar o saque para frente.
+
+**5. Sobre os seus 300 mil satoshis (≈ 0,003 BTC, ~US$ 245):** sinto dizer, mas trate como perdido. E cuidado redobrado agora: **todo site, "suporte", perfil no Telegram ou serviço que prometer recuperar saldo do FreeBitco.in mediante taxa é golpe** — é o segundo assalto, sempre mais rápido que o primeiro [2](https://www.weex.com/learn/articles/freebitcoin-has-shut-down-what-users-should-know-fvjnx0k7bf8mgqzr64kigj9k).
+
+### 17.7 A verdade final sobre esse caso
 
 O FreeBitco.in não caiu porque o código era ruim. Caiu porque **fraude corroeu a margem, regulação corroeu a operação e a custódia corroeu a confiança**. As três coisas são exatamente as que você disse que não se resolvem com código.
 
@@ -614,6 +652,17 @@ Um gigante de 12 anos caiu por elas. A única vantagem que você tem sobre ele �
 - https://blueconsult.com.br/imposto-criptomoedas-brasil-2026/ — regime nacional vs. exterior
 - https://www.mattosfilho.com.br/unico/decripto-receita-federal-ocde/ — DeCripto, IN 2.291/2025
 - https://panoramacrypto.transfero.com/como-declarar-criptomoedas-no-imposto-de-renda-2026/ — isenção R$ 35 mil
+
+**Modelo de negócio do FreeBitco.in (capítulos 17.5 e 17.6)** — verificado em 17/10/2026
+- https://suitableinvestmentforyou.blogspot.com/2020/03/how-do-i-earn-compound-interest-on-my-bitcoin-balance.html?m=1 — texto do próprio site: saldo dividido em 3 partes (saques, banca do jogo, mineração); renda vem do Multiply BTC
+- https://read.cash/@Treater98/full-review-of-freebitcoin-bd6f7053 — vantagem da casa de ~5% no Hi-Lo
+- https://prfreebitcoin.medium.com/participate-in-freebitco-ins-2-million-fun-token-giveaway-f392cc32cab4 — FreeBitco.in adquiriu 3,75 bilhões de tokens FUN
+- https://freebitco.in/static/html/token/user.html — Premium: 2.500 a 500.000 FUN, trava de 1 a 12 meses
+- https://www.publish0x.com/crypto-faucets-how-much-can-you-make/freebitcoin-new-premium-membership-program-xkyeojv — taxa de 1% na compra de FUN
+- https://beincrypto.com/fun-token-dedicated-savings-program-freebitco-in/ — 100 milhões de FUN travados em horas
+- https://www.investing.com/news/cryptocurrency-news/binancelisted-fun-token-to-tap-from-freebitcoins-41-million-users-through-premium-membership-program-launch-2409149 — 41 milhões de usuários, 52 milhões de visitas/mês
+- https://medium.com/@ethan_l/freebitco-in-earning-guide-546a66dc0389 — comissões de indicação (50% claim, 0,4% aposta, 25% juros)
+- https://elspethrooney.github.io/2020/10/27/a_great_review_of_freebitcoin.html — 1 ponto = 1 satoshi, mínimo de 100 mil pontos para trocar
 
 **O caso FreeBitco.in (capítulo 17)** — verificado em 17/10/2026
 - https://thebitcoinmanual.com/articles/the-fall-of-freebitco-in/ — linha do tempo completa, multas da KSA, crise de saques
