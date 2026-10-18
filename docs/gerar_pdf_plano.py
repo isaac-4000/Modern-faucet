@@ -14,7 +14,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import (
     BaseDocTemplate, PageTemplate, Frame, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, KeepTogether, Flowable, NextPageTemplate,
+    PageBreak, KeepTogether, Flowable, NextPageTemplate, CondPageBreak,
 )
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -244,6 +244,7 @@ def parse(md, toc_pages=None):
         if s.startswith("# "):
             flush_par(buf)
             txt = s[2:].strip()
+            out.append(CondPageBreak(7 * cm))
             out.append(SectionMark(txt))
             out.append(Paragraph(inline(txt), S["h1"]))
             out.append(Spacer(1, 5))
@@ -263,6 +264,7 @@ def parse(md, toc_pages=None):
                 bloco = []
                 titulo = txt
             marca = SectionMark(txt)
+            out.append(CondPageBreak(6 * cm))
             bloco.append(marca)
             bloco.append(Paragraph(inline(titulo), S["h2"]))
             bloco.append(HRule(color=colors.HexColor("#E3B778"), thick=1.1, pad=2))
@@ -276,6 +278,7 @@ def parse(md, toc_pages=None):
         if s.startswith("### "):
             flush_par(buf)
             txt = s[4:].strip()
+            out.append(CondPageBreak(3.5 * cm))
             out.append(Paragraph(inline(txt), S["h3"]))
             i += 1
             continue
@@ -530,9 +533,11 @@ def build(md_path, out_path, toc_pages=None):
 
 
 if __name__ == "__main__":
-    MD = "../PLANO_DE_NEGOCIO_FAUCET.md"
+    # caminhos resolvidos a partir do proprio script: funciona de qualquer diretorio
+    ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    MD = os.path.join(ROOT, "PLANO_DE_NEGOCIO_FAUCET.md")
     TMP = "/tmp/_pass1.pdf"
-    OUT = "../Plano-de-Negocio-Faucet.pdf"
+    OUT = os.path.join(ROOT, "Plano-de-Negocio-Faucet.pdf")
 
     # passada 1 — descobre as paginas
     toc1 = build(MD, TMP, toc_pages=[])

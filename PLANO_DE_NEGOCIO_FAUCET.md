@@ -1,7 +1,7 @@
 # Plano de Negócio — Faucet de Criptomoedas
 
 **Para:** Isaac (`isaac-4000`)
-**Data:** 16 de outubro de 2026
+**Data:** 16 de outubro de 2026 (atualizado em 17/10/2026 — ver capítulo 17: a queda do FreeBitco.in)
 **Base:** números reais de mercado pesquisados nesta data. Fontes no final.
 **Pré-requisito de leitura:** este plano assume que você leu — e aceitou — o diagnóstico técnico do projeto.
 
@@ -520,7 +520,56 @@ O ruim é o terceiro caminho: nunca decidir, nunca lançar e nunca encerrar. É 
 
 ---
 
-## 17. Fontes consultadas (16/10/2026)
+## 17. Estudo de caso: a queda do FreeBitco.in (atualizado em 17/10/2026)
+
+> Este capítulo foi escrito depois da notícia: **o maior faucet do mundo, com 12 anos de operação, saiu do ar.** Testei agora, em 17/10/2026: `freebitco.in` responde **502 Bad Gateway** — o Cloudflare está de pé, o servidor de origem não. Não é manutenção de alguns minutos: o site está assim há semanas.
+
+### 17.1 A linha do tempo (o que se pode verificar)
+
+| Data | Fato |
+|---|---|
+| Nov/2024 | Regulador holandês (KSA) multa a operadora **FBC B.V.** em **€ 280 mil por semana**, teto de **€ 840 mil**, por oferecer jogos de azar (Hi-Lo, loteria) sem licença local [1](https://thebitcoinmanual.com/articles/the-fall-of-freebitco-in/) |
+| Dez/2024 | Regulador australiano (ACMA) envia advertência formal à mesma empresa por jogo ilegal [7](https://www.publish0x.com/pennypay/the-end-of-freebitcoin-why-the-famous-faucet-stopped-paying-xnjxnpl) |
+| Ago–Set/2025 | Saques começam a travar em "pending", sem txid e sem resposta do suporte [1](https://thebitcoinmanual.com/articles/the-fall-of-freebitco-in/) |
+| 10/Out/2025 | **O domínio expira e o site sai do ar.** Renovado em seguida, mas a confiança já foi [10](https://www.reddit.com/r/PennyPay/comments/1o3u8gz/freebitcoin_site_down_domain_expired_oct_2025/) |
+| Nov/2025 | Pontos de recompensa cortados pela metade sem aviso; suporte desaparece [1](https://thebitcoinmanual.com/articles/the-fall-of-freebitco-in/) |
+| 12/Dez/2025 | **Comunicado oficial de encerramento**, com a justificativa de "uso indevido generalizado" e a promessa de liberar saques "no início de 2026" [4](https://best-faucets.com/freebitcoin-the-largest-faucet-has-closed-and-gone-offline) |
+| Fev/2026 | Usuários relatam site inacessível e login quebrado; sessões invalidadas [2](https://www.weex.com/learn/articles/freebitcoin-has-shut-down-what-users-should-know-fvjnx0k7bf8mgqzr64kigj9k) |
+| 16/Mai/2026 | Botões de **depósito** voltam a funcionar — enquanto saques seguem travados. É o que faz a comunidade chamar de **exit scam** [5](https://freebitcoinscam.com/the-fake-shutdown-in-2026/) |
+| Jun/2026 | Diretórios de faucet **deslistam** a plataforma após falha no teste de saque [9](https://freecrypto.world/blog/freebitco-in-stopped-paying) |
+| Ago–Out/2026 | **502 Bad Gateway** permanente [15](https://www.trustpilot.com/review/freebitco.in) |
+
+### 17.2 O detalhe que dói: tráfego não é negócio
+
+Em agosto de 2026, o FreeBitco.in ainda tinha cerca de **3,8 milhões de visitas por mês**, com Brasil entre os principais países [2](https://www.weex.com/learn/articles/freebitcoin-has-shut-down-what-users-should-know-fvjnx0k7bf8mgqzr64kigj9k). Visitantes não pagam boleto. O que mede a saúde de um faucet é uma coisa só: **o saque sai?** Pegue essa régua para o seu projeto.
+
+### 17.3 As 3 causas — e nenhuma delas é de código
+
+**1. Fraude.** A justificativa oficial foi "abuso generalizado". Um site que paga por clique atrai exércitos de bots, e bot não vê anúncio: consome sats e não gera receita. É exatamente a seção 4 deste plano. O FreeBitco.in tinha escala, equipe e 12 anos de dados — e mesmo assim perdeu essa guerra. **Você, sozinho e com orçamento zero, precisa de uma defesa que funcione dormindo** (saque mínimo alto, 1 conta por IP, Turnstile, limite por rota).
+
+**2. Regulação — e aqui está o aviso mais caro deste documento.** A multa holandesa não foi por causa do faucet. Foi por causa do **jogo de azar** (Hi-Lo, loteria, multiplicador). O FreeBitco.in era as duas coisas, e foi o braço de aposta que trouxe o regulador para dentro da casa. Seu projeto tem um **jogo de dados com aposta de saldo** — é o mesmo desenho, em escala minúscula. A diferença é que você está no Brasil, onde a outorga de apostas de quota fixa chega a **R$ 30 milhões** (seção 8). **A decisão da seção 7 acabou de ficar óbvia: tire a aposta, mantenha o dado como diversão sem saldo.**
+
+**3. Custódia e confiança.** O FreeBitco.in também aceitava **depósitos** e pagava juros. No momento em que o caixa apertou, ele estava segurando dinheiro dos outros — e virou suspeito de sumir com ele. **Regra para o seu projeto: nunca aceite depósito.** Faucet paga para fora, só. Sem depósito, sem "saldo rendendo", sem função de banco. Isso elimina inteiramente a chance de você ser acusado de golpe — e elimina também a pior dor de cabeça regulatória.
+
+### 17.4 O que muda no seu plano
+
+| O que aconteceu | Consequência prática para você |
+|---|---|
+| O líder do nicho morreu | **Oportunidade:** milhões de usuários órfãos procurando alternativa. Diretórios e fóruns vão reescrever suas listas agora. |
+| A palavra "faucet" foi associada a calote | **Custo:** desconfiança. Prova de pagamento pública e saque mínimo baixo deixam de ser detalhes — são o seu marketing. |
+| O braço de aposta causou a multa | **Ação:** remover a aposta do dados. Não é opinião, é precedente. |
+| O domínio expirou e derrubou o site | **Ação:** registrar o domínio com renovação automática e deixar o vencimento anotado. Custa R$ 40/ano e já derrubou um gigante. |
+| Saque travado matou a reputação | **Ação:** nunca prometer prazo que você não controla; e nunca segurar saldo grande de usuário — limite de saque baixo e processamento automático. |
+
+### 17.5 A verdade final sobre esse caso
+
+O FreeBitco.in não caiu porque o código era ruim. Caiu porque **fraude corroeu a margem, regulação corroeu a operação e a custódia corroeu a confiança**. As três coisas são exatamente as que você disse que não se resolvem com código.
+
+Um gigante de 12 anos caiu por elas. A única vantagem que você tem sobre ele é poder **decidir agora**, antes de ter usuários, que tipo de negócio não quer ser.
+
+---
+
+## 18. Fontes consultadas (16/10/2026, atualizado 17/10/2026)
 
 **Mercado e economia de faucet**
 - https://readyfaucet.com/blog/how-to-make-money-with-crypto-faucets — modelo de negócio, US$ 50–100 primeiro mês, meta US$ 500–1.000
@@ -566,6 +615,16 @@ O ruim é o terceiro caminho: nunca decidir, nunca lançar e nunca encerrar. É 
 - https://www.mattosfilho.com.br/unico/decripto-receita-federal-ocde/ — DeCripto, IN 2.291/2025
 - https://panoramacrypto.transfero.com/como-declarar-criptomoedas-no-imposto-de-renda-2026/ — isenção R$ 35 mil
 
+**O caso FreeBitco.in (capítulo 17)** — verificado em 17/10/2026
+- https://thebitcoinmanual.com/articles/the-fall-of-freebitco-in/ — linha do tempo completa, multas da KSA, crise de saques
+- https://best-faucets.com/freebitcoin-the-largest-faucet-has-closed-and-gone-offline — texto integral do comunicado de encerramento
+- https://www.weex.com/learn/articles/freebitcoin-has-shut-down-what-users-should-know-fvjnx0k7bf8mgqzr64kigj9k — KSA/FBC B.V., 3,8 mi de visitas/mês em ago/2026
+- https://www.publish0x.com/pennypay/the-end-of-freebitcoin-why-the-famous-faucet-stopped-paying-xnjxnpl — expiração do domínio, ACMA
+- https://freebitcoinscam.com/the-fake-shutdown-in-2026/ — reabertura dos depósitos em 16/mai/2026
+- https://freecrypto.world/blog/freebitco-in-stopped-paying — deslistagem por falha no teste de saque (jun/2026)
+- https://www.trustpilot.com/review/freebitco.in — relatos de usuários e erro 502 (ago–set/2026)
+- https://portaldobitcoin.uol.com.br/site-freebitcoin-pioneiro-do-bitcoin-vai-encerrar-atividades/ — cobertura em português
+
 ---
 
-*Documento de trabalho. Números de mercado são referências datadas — reconfira antes de tomar decisão financeira. As seções 7, 8 e 9 não substituem advogado e contador.*
+*Documento de trabalho. Números de mercado são referências datadas — reconfira antes de tomar decisão financeira. As seções 7, 8 e 9 não substituem advogado e contador. Atualizado em 17/10/2026 com o capítulo 17 (estudo de caso FreeBitco.in).*
