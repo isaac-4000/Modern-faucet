@@ -17,7 +17,10 @@ export const AuthProvider = ({ children }) => {
   const [adminToken, setAdminToken] = useState(localStorage.getItem('adminToken'))
   const [loading, setLoading] = useState(true)
 
-  const API_BASE_URL = 'http://localhost:8000/api'
+  // Vem do .env do frontend (VITE_API_BASE_URL). Nunca deixe o endereço do
+  // backend cravado no código: em produção ele muda.
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
   useEffect(() => {
     if (token) {
@@ -101,7 +104,9 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const register = async (walletAddress, email, password, referredBy) => {
+  // captchaToken vem do widget da Cloudflare Turnstile. O backend recusa o
+  // cadastro sem ele — é o que separa gente de script.
+  const register = async (walletAddress, email, password, referredBy, captchaToken) => {
     try {
       const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
@@ -113,6 +118,7 @@ export const AuthProvider = ({ children }) => {
           email: email,
           password: password,
           referred_by: referredBy,
+          'cf-turnstile-response': captchaToken,
         }),
       })
 
@@ -124,7 +130,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', data.token)
         return { success: true }
       } else {
-        return { success: false, errors: data.errors }
+        return { success: false, errors: data.errors, message: data.message }
       }
     } catch (error) {
       console.error('Register error:', error)
@@ -132,7 +138,7 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const loginAdmin = async (username, password) => {
+  const loginAdmin = async (username, password, captchaToken) => {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
@@ -142,6 +148,7 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({
           username: username,
           password: password,
+          'cf-turnstile-response': captchaToken,
         }),
       })
 
@@ -153,7 +160,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('adminToken', data.token)
         return { success: true }
       } else {
-        return { success: false, message: data.message || 'Login failed' }
+        return { success: false, message: data.message || 'Login failed', errors: data.errors }
       }
     } catch (error) {
       console.error('Admin login error:', error)

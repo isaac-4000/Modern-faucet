@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
+import TurnstileWidget from '../components/TurnstileWidget'
+import TankBar from '../components/TankBar'
+import { Link } from 'react-router-dom'
 import { 
   Coins, 
   Clock, 
@@ -12,7 +15,8 @@ import {
   CheckCircle,
   Bitcoin,
   Gift,
-  Timer
+  Timer,
+  Wallet
 } from 'lucide-react'
 
 const Faucet = () => {
@@ -23,6 +27,8 @@ const Faucet = () => {
   const [message, setMessage] = useState('')
   const [timeLeft, setTimeLeft] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+  const [captchaKey, setCaptchaKey] = useState(0)
 
   useEffect(() => {
     fetchFaucetInfo()
@@ -69,6 +75,13 @@ const Faucet = () => {
   }
 
   const handleClaim = async () => {
+    // O captcha é resolvido uma vez por claim. Se algo falhar, a key muda
+    // e o widget é recriado, obrigando a resolver de novo.
+    if (!captchaToken) {
+      setMessage('Confirme que você não é um robô antes de continuar.')
+      return
+    }
+
     setClaiming(true)
     setMessage('')
     
@@ -79,15 +92,25 @@ const Faucet = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          'cf-turnstile-response': captchaToken,
+        }),
       })
       
       const data = await response.json()
       
       if (response.ok) {
-        setMessage(`Sucesso! Você ganhou ${data.amount} BTC`)
+        setMessage(`Sucesso! Você ganhou ${data.amount} pontos.`)
+        setCaptchaToken('')
+        setCaptchaKey((k) => k + 1)
         fetchFaucetInfo()
       } else {
-        setMessage(data.message || 'Erro ao fazer claim')
+        const primeiroErro = data.errors
+          ? Object.values(data.errors).flat()[0]
+          : null
+        setMessage(primeiroErro || data.message || 'Erro ao fazer claim')
+        setCaptchaToken('')
+        setCaptchaKey((k) => k + 1)
       }
     } catch (error) {
       console.error('Error claiming:', error)
@@ -143,13 +166,20 @@ const Faucet = () => {
             <Coins className="h-12 w-12 text-orange-500" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Faucet Bitcoin Gratuita
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Faucet de Criptomoedas
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
-          Ganhe Bitcoin grátis a cada 30 minutos
+          Ganhe pontos a cada {Math.round((faucetInfo?.claim_interval_seconds || 240) / 60)} minutos e troque por{' '}
+          {faucetInfo?.payout_currency || 'DGB'}
         </p>
       </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <TankBar tank={faucetInfo?.tank} />
+        </CardContent>
+      </Card>
 
       {message && (
         <Alert className={message.includes('Sucesso') ? 'border-green-500 bg-green-50 dark:bg-green-900' : ''}>
@@ -166,28 +196,35 @@ const Faucet = () => {
               <span>Fazer Claim</span>
             </CardTitle>
             <CardDescription>
-              Ganhe {faucetInfo?.claim_amount} BTC grátis
+              Ganhe {faucetInfo?.claim_amount} pontos grátis
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {faucetInfo?.can_claim ? (
-              <Button 
-                onClick={handleClaim} 
-                disabled={claiming}
-                className="w-full h-12 text-lg"
-              >
-                {claiming ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Processando...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Coins className="h-5 w-5" />
-                    <span>Claim {faucetInfo?.claim_amount} BTC</span>
-                  </div>
-                )}
-              </Button>
+              <div className="space-y-3">
+                <TurnstileWidget key={captchaKey} onToken={setCaptchaToken} />
+                <Button 
+                  onClick={handleClaim} 
+                  disabled={claiming || !captchaToken}
+                  className="w-full h-12 text-lg"
+                >
+                  {claiming ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Processando...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Coins className="h-5 w-5" />
+                      <span>
+                        {captchaToken
+                          ? `Resgatar ${faucetInfo?.claim_amount} pontos`
+                          : 'Confirme que você não é um robô'}
+                      </span>
+                    </div>
+                  )}
+                </Button>
+              </div>
             ) : (
               <div className="space-y-4">
                 <div className="text-center">
@@ -215,8 +252,16 @@ const Faucet = () => {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-300">Seu saldo:</span>
                 <span className="font-semibold text-orange-500">
-                  {user?.balance} BTC
+                  {Number(user?.balance ?? 0).toFixed(2)} pontos
                 </span>
+              </div>
+              <div className="pt-2">
+                <Link to="/withdraw">
+                  <Button variant="outline" className="w-full">
+                    <Wallet className="h-4 w-4 mr-2" />
+                    Sacar meus pontos
+                  </Button>
+                </Link>
               </div>
             </div>
           </CardContent>
@@ -286,7 +331,7 @@ const Faucet = () => {
                   {faucetInfo?.claim_amount}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  BTC por claim
+                  Pontos por claim
                 </p>
               </div>
             </div>
@@ -298,7 +343,9 @@ const Faucet = () => {
             <div className="flex items-center space-x-2">
               <Clock className="h-8 w-8 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold text-blue-500">30</p>
+                <p className="text-2xl font-bold text-blue-500">
+                  {Math.round((faucetInfo?.claim_interval_seconds || 240) / 60)}
+                </p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
                   Minutos entre claims
                 </p>

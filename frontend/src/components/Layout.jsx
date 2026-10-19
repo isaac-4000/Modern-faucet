@@ -10,7 +10,8 @@ import {
   LogOut, 
   Settings, 
   User,
-  Bitcoin
+  Bitcoin,
+  Wallet
 } from 'lucide-react'
 
 const Layout = ({ children }) => {
@@ -83,6 +84,18 @@ const Layout = ({ children }) => {
                     <Dice6 className="h-4 w-4" />
                     <span>Jogo de Dados</span>
                   </Link>
+
+                  <Link
+                    to="/withdraw"
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive('/withdraw') 
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                        : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
+                    }`}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    <span>Sacar</span>
+                  </Link>
                 </>
               )}
 
@@ -106,7 +119,9 @@ const Layout = ({ children }) => {
               {user && (
                 <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                   <User className="h-4 w-4" />
-                  <span className="font-medium">{user.balance} BTC</span>
+                  <span className="font-medium">
+                    {Number(user.balance ?? 0).toFixed(2)} pontos
+                  </span>
                 </div>
               )}
 
@@ -158,7 +173,7 @@ const Layout = ({ children }) => {
               </span>
             </div>
             <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-300">
-              <span>Faucet Bitcoin Gratuita</span>
+              <span>Faucet de Criptomoedas</span>
               <span>•</span>
               <span>Jogo de Dados Provably Fair</span>
               <span>•</span>

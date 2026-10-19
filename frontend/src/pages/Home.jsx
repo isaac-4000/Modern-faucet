@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import TankBar from '../components/TankBar'
 import { 
   Coins, 
   Dice6, 
@@ -21,7 +22,7 @@ const Home = () => {
     {
       icon: Coins,
       title: 'Faucet Gratuita',
-      description: 'Ganhe Bitcoin grátis a cada 30 minutos. Sem truques, sem pegadinhas.',
+      description: 'Ganhe pontos grátis a cada 4 minutos. Sem truques, sem pegadinhas.',
     },
     {
       icon: Dice6,
@@ -36,7 +37,7 @@ const Home = () => {
     {
       icon: Zap,
       title: 'Pagamentos Rápidos',
-      description: 'Saques processados rapidamente para sua carteira.',
+      description: 'Saques pela FaucetPay, direto na sua conta. Sem taxa escondida.',
     },
     {
       icon: Users,
@@ -52,7 +53,7 @@ const Home = () => {
 
   const stats = [
     { label: 'Usuários Ativos', value: '10,000+' },
-    { label: 'Bitcoin Distribuído', value: '5.2 BTC' },
+    { label: 'Pagamento em', value: 'DGB' },
     { label: 'Jogos Jogados', value: '50,000+' },
     { label: 'Uptime', value: '99.9%' },
   ]
@@ -67,13 +68,17 @@ const Home = () => {
           </div>
         </div>
         <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-          Ganhe Bitcoin
+          Ganhe cripto
           <span className="text-orange-500"> Grátis</span>
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-          A faucet de Bitcoin mais moderna e confiável. Ganhe Bitcoin grátis a cada 30 minutos 
-          e multiplique seus ganhos com nosso jogo de dados provably fair.
+          Uma faucet moderna e honesta. Você junta pontos a cada 4 minutos,
+          troca por DigiByte (DGB) e multiplica no jogo de dados provably fair.
         </p>
+
+        <div className="max-w-md mx-auto mb-8">
+          <TankBar />
+        </div>
         
         {user ? (
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -130,7 +135,7 @@ const Home = () => {
             Por que escolher nossa faucet?
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Oferecemos a melhor experiência para ganhar Bitcoin grátis com segurança e transparência.
+            Uma faucet feita para durar: transparência no que paga e limite claro no que sai por dia.
           </p>
         </div>
 
@@ -160,10 +165,10 @@ const Home = () => {
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12 px-6 mx-6 rounded-lg">
           <div className="text-center">
             <h3 className="text-2xl md:text-3xl font-bold mb-4">
-              Pronto para começar a ganhar Bitcoin?
+              Pronto para começar a ganhar?
             </h3>
             <p className="text-lg mb-8 opacity-90">
-              Registre-se agora e comece a ganhar Bitcoin grátis em menos de 1 minuto.
+              Registre-se agora e comece a juntar pontos em menos de 1 minuto.
             </p>
             <Link to="/register">
               <Button size="lg" variant="secondary">

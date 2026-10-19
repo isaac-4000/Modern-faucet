@@ -119,8 +119,8 @@ const DiceGame = () => {
     }
   }
 
-  const formatBTC = (amount) => {
-    return parseFloat(amount).toFixed(8)
+  const formatarPontos = (amount) => {
+    return parseFloat(amount).toFixed(2)
   }
 
   return (
@@ -136,7 +136,7 @@ const DiceGame = () => {
           Jogo de Dados Provably Fair
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
-          Multiplique seus Bitcoin com nosso jogo transparente e verificável
+          Multiplique seus pontos com nosso jogo transparente e verificável
         </p>
       </div>
 
@@ -168,13 +168,13 @@ const DiceGame = () => {
             <CardContent className="space-y-6">
               {/* Bet Amount */}
               <div className="space-y-2">
-                <Label htmlFor="betAmount">Valor da Aposta (BTC)</Label>
+                <Label htmlFor="betAmount">Valor da Aposta (pontos)</Label>
                 <Input
                   id="betAmount"
                   type="number"
-                  step="0.00000001"
-                  min="0.00000001"
-                  max="0.00005000"
+                  step="1"
+                  min="1"
+                  max="50"
                   value={betAmount}
                   onChange={(e) => setBetAmount(e.target.value)}
                   className="font-mono"
@@ -183,28 +183,28 @@ const DiceGame = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setBetAmount('0.00000001')}
+                    onClick={() => setBetAmount('1')}
                   >
                     Min
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setBetAmount((parseFloat(betAmount) * 2).toFixed(8))}
+                    onClick={() => setBetAmount(String(Math.min(50, Math.floor(parseFloat(betAmount) * 2) || 1)))}
                   >
                     2x
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setBetAmount((parseFloat(betAmount) / 2).toFixed(8))}
+                    onClick={() => setBetAmount(String(Math.max(1, Math.floor(parseFloat(betAmount) / 2) || 1)))}
                   >
                     1/2
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setBetAmount(user?.balance || '0')}
+                    onClick={() => setBetAmount(String(Math.min(50, Math.floor(parseFloat(user?.balance) || 1))))}
                   >
                     Max
                   </Button>
@@ -290,13 +290,13 @@ const DiceGame = () => {
                   </div>
                   <div>
                     <p className={`text-2xl font-bold ${lastResult.is_win ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatBTC(lastResult.payout_amount)}
+                      {formatarPontos(lastResult.payout_amount)}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">Pagamento</p>
                   </div>
                   <div>
                     <p className={`text-2xl font-bold ${lastResult.net_profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {lastResult.net_profit >= 0 ? '+' : ''}{formatBTC(lastResult.net_profit)}
+                      {lastResult.net_profit >= 0 ? '+' : ''}{formatarPontos(lastResult.net_profit)}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">Lucro</p>
                   </div>
@@ -328,13 +328,13 @@ const DiceGame = () => {
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-300">Pagamento:</span>
                   <span className="font-semibold text-green-500">
-                    {formatBTC(calculatePayout())} BTC
+                    {formatarPontos(calculatePayout())} pontos
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-300">Seu Saldo:</span>
                   <span className="font-semibold text-orange-500">
-                    {user?.balance} BTC
+                    {Number(user?.balance ?? 0).toFixed(2)} pontos
                   </span>
                 </div>
               </div>
@@ -387,7 +387,7 @@ const DiceGame = () => {
                         </span>
                         <span>{game.target_number}</span>
                         <span className={game.is_win ? 'text-green-500' : 'text-red-500'}>
-                          {game.is_win ? '+' : '-'}{formatBTC(Math.abs(game.payout_amount - game.bet_amount))}
+                          {game.is_win ? '+' : '-'}{formatarPontos(Math.abs(game.payout_amount - game.bet_amount))} pts
                         </span>
                       </div>
                     ))
