@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import TurnstileWidget from '../components/TurnstileWidget'
 import { Settings, Eye, EyeOff, Shield } from 'lucide-react'
 
 const AdminLogin = () => {
@@ -14,6 +15,8 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+  const [captchaKey, setCaptchaKey] = useState(0)
   
   const { loginAdmin } = useAuth()
   const navigate = useNavigate()
@@ -29,14 +32,23 @@ const AdminLogin = () => {
       return
     }
 
-    const result = await loginAdmin(username, password)
-    
+    if (!captchaToken) {
+      setError('Confirme que você não é um robô.')
+      setLoading(false)
+      return
+    }
+
+    const result = await loginAdmin(username, password, captchaToken)
+
     if (result.success) {
       navigate('/admin/dashboard')
-    } else {
-      setError(result.message || 'Erro ao fazer login.')
+      return
     }
-    
+
+    // O token do captcha vale uma vez só: obriga a resolver de novo.
+    setCaptchaToken('')
+    setCaptchaKey((k) => k + 1)
+    setError(result.message || 'Erro ao fazer login.')
     setLoading(false)
   }
 
@@ -101,6 +113,8 @@ const AdminLogin = () => {
                 </Button>
               </div>
             </div>
+
+            <TurnstileWidget key={captchaKey} onToken={setCaptchaToken} />
 
             <Button 
               type="submit" 

@@ -11,4 +11,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    host: true,
+    // Permite acesso via preview/proxy (ex.: *.e2b.app) em ambiente de desenvolvimento
+    allowedHosts: ['.e2b.app', 'localhost'],
+  },
 })

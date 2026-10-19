@@ -18,5 +18,14 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+
+        // Cria o primeiro administrador (leia database/seeders/AdminSeeder.php).
+        // Sem ele não existe como logar no painel: a rota que cria admins
+        // exige que quem chama já seja admin.
+        // Cria as configurações da economia (pontos, cotação, limites).
+        $this->call(SettingsSeeder::class);
+
+        // Cria o primeiro administrador.
+        $this->call(AdminSeeder::class);
     }
 }

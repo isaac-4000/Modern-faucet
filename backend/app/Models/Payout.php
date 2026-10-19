@@ -22,6 +22,11 @@ class Payout extends Model
         'transaction_id',
         'status',
         'processed_at',
+        'idempotency_key',
+        'amount_brl',
+        'points_amount',
+        'error_message',
+        'ip_address',
     ];
 
     /**
@@ -31,6 +36,8 @@ class Payout extends Model
      */
     protected $casts = [
         'amount' => 'decimal:8',
+        'amount_brl' => 'decimal:8',
+        'points_amount' => 'decimal:8',
         'processed_at' => 'datetime',
     ];
 

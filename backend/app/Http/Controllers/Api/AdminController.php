@@ -9,10 +9,12 @@ use App\Models\Transaction;
 use App\Models\DiceGame;
 use App\Models\Payout;
 use App\Models\Setting;
+use App\Services\FaucetEconomy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -76,6 +78,21 @@ class AdminController extends Controller
         $oldBalance = $user->balance;
         $newBalance = $request->balance;
         $difference = $newBalance - $oldBalance;
+
+        // Auditoria: quem mudou o saldo de quem, de quanto para quanto, e de
+        // onde. Sem isso, um ajuste indevido é impossível de rastrear depois.
+        // TODO: quando a unidade mudar de BTC para pontos (ver plano de
+        // negócio, seção 3.4), revisar a validação de 'balance' abaixo.
+        Log::info('admin.balance_updated', [
+            'admin_id' => $request->user()?->id,
+            'admin_username' => $request->user()?->username,
+            'user_id' => $user->id,
+            'old_balance' => $oldBalance,
+            'new_balance' => $newBalance,
+            'difference' => $difference,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         DB::transaction(function () use ($user, $newBalance, $difference) {
             $user->update(['balance' => $newBalance]);
@@ -159,9 +176,20 @@ class AdminController extends Controller
         }
 
         $setting = Setting::findOrFail($settingId);
+        $oldValue = $setting->setting_value;
+
         $setting->update([
             'setting_value' => $request->setting_value,
             'description' => $request->description ?? $setting->description,
+        ]);
+
+        Log::info('admin.setting_updated', [
+            'admin_id' => $request->user()?->id,
+            'admin_username' => $request->user()?->username,
+            'setting_key' => $setting->setting_key,
+            'old_value' => $oldValue,
+            'new_value' => $setting->setting_value,
+            'ip' => $request->ip(),
         ]);
 
         return response()->json([
@@ -178,7 +206,9 @@ class AdminController extends Controller
         $validator = Validator::make($request->all(), [
             'username' => 'required|string|unique:admins',
             'email' => 'nullable|email|unique:admins',
-            'password' => 'required|string|min:6',
+            // Conta de administrador mexe no saldo de todo mundo: a senha
+            // precisa ser forte de verdade, não "123456".
+            'password' => 'required|string|min:12',
         ]);
 
         if ($validator->fails()) {
@@ -188,7 +218,17 @@ class AdminController extends Controller
         $admin = Admin::create([
             'username' => $request->username,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            // O model Admin tem o cast 'password' => 'hashed'. Passamos a
+            // senha em texto puro e deixamos o cast fazer o hash.
+            'password' => $request->password,
+        ]);
+
+        Log::info('admin.created', [
+            'created_by_admin_id' => $request->user()?->id,
+            'created_by_admin_username' => $request->user()?->username,
+            'new_admin_id' => $admin->id,
+            'new_admin_username' => $admin->username,
+            'ip' => $request->ip(),
         ]);
 
         return response()->json([
@@ -205,6 +245,75 @@ class AdminController extends Controller
         $admins = Admin::all();
 
         return response()->json($admins);
+    }
+
+    /**
+     * Painel da economia: quanto está saindo, quanto falta, e se a conta fecha.
+     *
+     * É a tela que você abre todo dia antes de tomar qualquer decisão.
+     */
+    public function faucetStatus(FaucetEconomy $economy)
+    {
+        $tank = $economy->tank();
+
+        $totalPaidOutBrl = (float) Payout::whereIn('status', ['pending', 'completed'])
+            ->sum('amount_brl');
+
+        $failedPayouts = Payout::where('status', 'failed')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get(['id', 'user_id', 'amount', 'currency', 'error_message', 'created_at']);
+
+        // Quantos usuários diferentes já sacaram hoje — um número alto, com
+        // poucos saques por usuário, é o sinal clássico de bot.
+        $distinctWithdrawersToday = Payout::whereIn('status', ['pending', 'completed'])
+            ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
+            ->distinct('user_id')
+            ->count('user_id');
+
+        return response()->json([
+            'tank' => $tank,
+            'total_paid_out_brl' => round($totalPaidOutBrl, 2),
+            'distinct_withdrawers_today' => $distinctWithdrawersToday,
+            'failed_payouts' => $failedPayouts,
+
+            // contas duplicadas — o indício mais forte de multi-conta
+            'suspicious_ips' => User::select('registration_ip')
+                ->selectRaw('COUNT(*) as total')
+                ->whereNotNull('registration_ip')
+                ->groupBy('registration_ip')
+                ->having('total', '>', 1)
+                ->orderByDesc('total')
+                ->limit(20)
+                ->get(),
+        ]);
+    }
+
+    /**
+     * Recalcula quantos pontos vale um claim, a partir do preço do DGB.
+     *
+     * Rode quando a moeda oscilar. Sem isso, se o DGB subir o seu custo em
+     * dólar sobe junto — e você só descobre no fim do mês.
+     */
+    public function recalculateClaim(Request $request, FaucetEconomy $economy)
+    {
+        $before = $economy->claimAmountPoints();
+        $after = $economy->recalculateClaimAmount();
+
+        Log::info('admin.claim_recalculado', [
+            'admin_id' => $request->user()?->id,
+            'de' => $before,
+            'para' => $after,
+            'dgb_usd_price' => $economy->dgbUsdPrice(),
+            'ip' => $request->ip(),
+        ]);
+
+        return response()->json([
+            'message' => 'Valor do claim recalculado.',
+            'antes' => $before,
+            'agora' => $after,
+            'tank' => $economy->tank(),
+        ]);
     }
 }
 

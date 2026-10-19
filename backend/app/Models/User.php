@@ -24,6 +24,9 @@ class User extends Authenticatable
         'referral_code',
         'referred_by',
         'last_claim_at',
+        'registration_ip',
+        'last_login_ip',
+        'last_claim_ip',
     ];
 
     /**

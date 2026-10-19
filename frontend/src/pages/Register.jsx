@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import TurnstileWidget from '../components/TurnstileWidget'
 import { UserPlus, Bitcoin, Eye, EyeOff, Users } from 'lucide-react'
 
 const Register = () => {
@@ -18,6 +19,8 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+  const [captchaKey, setCaptchaKey] = useState(0)
   
   const { register } = useAuth()
   const navigate = useNavigate()
@@ -53,8 +56,19 @@ const Register = () => {
       newErrors.confirmPassword = 'Senhas não coincidem'
     }
 
+    if (!captchaToken) {
+      newErrors.captcha = 'Confirme que você não é um robô'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  // O token do captcha vale só uma vez. Se o cadastro falhar, a gente
+  // obriga o usuário a resolver de novo trocando a key do widget.
+  const reiniciarCaptcha = () => {
+    setCaptchaToken('')
+    setCaptchaKey((k) => k + 1)
   }
 
   const handleSubmit = async (e) => {
@@ -67,16 +81,19 @@ const Register = () => {
 
     setLoading(true)
 
-    const result = await register(walletAddress, email, password, referredBy)
-    
+    const result = await register(walletAddress, email, password, referredBy, captchaToken)
+
     if (result.success) {
       navigate('/faucet')
+      return
+    }
+
+    reiniciarCaptcha()
+
+    if (result.errors) {
+      setErrors(result.errors)
     } else {
-      if (result.errors) {
-        setErrors(result.errors)
-      } else {
-        setErrors({ general: result.message || 'Erro ao criar conta.' })
-      }
+      setErrors({ general: result.message || 'Erro ao criar conta.' })
     }
     
     setLoading(false)
@@ -221,6 +238,13 @@ const Register = () => {
               </div>
             )}
 
+            <div className="space-y-2">
+              <TurnstileWidget key={captchaKey} onToken={setCaptchaToken} />
+              {errors.captcha && (
+                <p className="text-sm text-red-500">{errors.captcha}</p>
+              )}
+            </div>
+
             <Button 
               type="submit" 
               className="w-full" 
@@ -255,7 +279,7 @@ const Register = () => {
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
               <Bitcoin className="h-4 w-4" />
-              <span>Sua carteira Bitcoin será usada para receber pagamentos</span>
+              <span>Uma conta por conexão. Se você divide a internet com outras pessoas, avise o suporte.</span>
             </div>
           </div>
         </CardContent>

@@ -3,60 +3,88 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Transaction;
 use App\Models\Setting;
+use App\Models\Transaction;
+use App\Models\User;
+use App\Rules\TurnstileToken;
+use App\Services\FaucetEconomy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class FaucetController extends Controller
 {
     /**
-     * Claim from faucet.
+     * Claim do faucet.
      */
     public function claim(Request $request)
     {
-        $user = $request->user();
+        // garante que as configurações de economia existem no banco
+        Setting::firstOrCreate(
+            ['setting_key' => 'faucet_claim_interval_seconds'],
+            ['setting_value' => '240', 'description' => 'Tempo em segundos entre claims do faucet.']
+        );
 
-        if (!$user->canClaim()) {
-            $setting = Setting::where('setting_key', 'faucet_claim_interval_seconds')->first();
-            $interval = $setting ? (int)$setting->setting_value : 1800;
+        Setting::firstOrCreate(
+            ['setting_key' => 'faucet_claim_amount'],
+            ['setting_value' => '11', 'description' => 'Pontos ganhos por claim do faucet.']
+        );
+
+        $user = $request->user();
+        $ip = $request->ip();
+
+        if (! $user->canClaim()) {
+            $interval = (int) Setting::getValue('faucet_claim_interval_seconds', '240');
             $nextClaimTime = $user->last_claim_at->addSeconds($interval);
-            
+
             return response()->json([
-                'message' => 'You must wait before claiming again',
+                'message' => 'Você precisa esperar para fazer um novo claim.',
                 'next_claim_at' => $nextClaimTime,
             ], 429);
         }
 
-        $claimAmount = Setting::getValue('faucet_claim_amount', '0.00000010');
+        // ------------------------------------------------------------- captcha
+        // É o que separa um humano de um script. Sem isso o intervalo de
+        // 4 minutos não vale nada: um bot só abriria 15 abas.
+        $validator = Validator::make($request->all(), [
+            'cf-turnstile-response' => ['required', new TurnstileToken($ip)],
+        ]);
 
-        DB::transaction(function () use ($user, $claimAmount) {
-            // Update user balance and last claim time
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $claimAmount = app(FaucetEconomy::class)->claimAmountPoints();
+
+        DB::transaction(function () use ($user, $claimAmount, $ip) {
             $user->increment('balance', $claimAmount);
-            $user->update(['last_claim_at' => now()]);
+            $user->update([
+                'last_claim_at' => now(),
+                'last_claim_ip' => $ip,
+            ]);
 
-            // Create transaction record
             Transaction::create([
                 'user_id' => $user->id,
                 'type' => 'faucet_claim',
                 'amount' => $claimAmount,
+                'currency' => 'points',
                 'status' => 'completed',
             ]);
 
-            // Handle referral bonus
+            // bônus de indicação
             if ($user->referred_by) {
                 $referrer = User::where('referral_code', $user->referred_by)->first();
                 if ($referrer) {
-                    $referralPercentage = Setting::getValue('referral_percentage', '0.10');
+                    $referralPercentage = (float) Setting::getValue('referral_percentage', '0.10');
                     $referralBonus = $claimAmount * $referralPercentage;
-                    
+
                     $referrer->increment('balance', $referralBonus);
-                    
+
                     Transaction::create([
                         'user_id' => $referrer->id,
                         'type' => 'referral_bonus',
                         'amount' => $referralBonus,
+                        'currency' => 'points',
                         'status' => 'completed',
                     ]);
                 }
@@ -66,36 +94,44 @@ class FaucetController extends Controller
         $user->refresh();
 
         return response()->json([
-            'message' => 'Claim successful',
+            'message' => 'Claim feito. '.$claimAmount.' pontos foram para o seu saldo.',
             'amount' => $claimAmount,
             'new_balance' => $user->balance,
+            'next_claim_in' => (int) Setting::getValue('faucet_claim_interval_seconds', '240'),
         ]);
     }
 
     /**
-     * Get faucet information.
+     * Informações do faucet para montar a tela.
      */
     public function info(Request $request)
     {
+        $economy = app(FaucetEconomy::class);
+
         $user = $request->user();
-        $claimAmount = Setting::getValue('faucet_claim_amount', '0.00000010');
-        $claimInterval = Setting::getValue('faucet_claim_interval_seconds', '1800');
-        
+        $claimAmount = $economy->claimAmountPoints();
+        $claimInterval = $economy->claimIntervalSeconds();
+
         $canClaim = $user->canClaim();
         $nextClaimTime = null;
-        
-        if (!$canClaim && $user->last_claim_at) {
-            $nextClaimTime = $user->last_claim_at->addSeconds((int)$claimInterval);
+
+        if (! $canClaim && $user->last_claim_at) {
+            $nextClaimTime = $user->last_claim_at->addSeconds($claimInterval);
         }
 
         return response()->json([
             'claim_amount' => $claimAmount,
-            'claim_interval_seconds' => (int)$claimInterval,
+            'claim_interval_seconds' => $claimInterval,
             'can_claim' => $canClaim,
             'next_claim_at' => $nextClaimTime,
             'user_balance' => $user->balance,
             'referral_url' => $user->referral_url,
+
+            // o que a tela de saque precisa saber
+            'minimum_payout_points' => $economy->minimumPayoutPoints(),
+            'minimum_payout_crypto' => $economy->minimumPayoutCrypto(),
+            'payout_currency' => $economy->payoutCurrency(),
+            'tank' => $economy->tank(),
         ]);
     }
 }
-

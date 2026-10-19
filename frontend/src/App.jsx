@@ -5,6 +5,7 @@ import Layout from './components/Layout'
 import Home from './pages/Home'
 import Faucet from './pages/Faucet'
 import DiceGame from './pages/DiceGame'
+import Withdraw from './pages/Withdraw'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import AdminLogin from './pages/AdminLogin'
@@ -20,6 +21,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/faucet" element={<Faucet />} />
             <Route path="/dice" element={<DiceGame />} />
+            <Route path="/withdraw" element={<Withdraw />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/admin/login" element={<AdminLogin />} />
