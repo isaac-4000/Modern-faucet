@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FaucetController;
 use App\Http\Controllers\Api\DiceController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\WithdrawalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +27,11 @@ use App\Http\Controllers\Api\AdminController;
 */
 
 // ---------------------------------------------------------------- rotas públicas
+
+// Estado da torneira (teto diário). É público de propósito: a barra aparece
+// na home para quem ainda nem tem conta — é prova de que o dinheiro existe.
+Route::get('/faucet/tank', [WithdrawalController::class, 'tank']);
+
 Route::post('/register', [AuthController::class, 'register'])
     ->middleware('throttle:register');
 
@@ -48,7 +54,16 @@ Route::middleware(['auth:sanctum', 'auth.user'])->group(function () {
 
     // Faucet routes
     Route::get('/faucet/info', [FaucetController::class, 'info']);
-    Route::post('/faucet/claim', [FaucetController::class, 'claim']);
+
+    // throttle:claim é a rede contra script que fica tentando fora do
+    // intervalo. Somado ao intervalo de 4 minutos e ao captcha.
+    Route::post('/faucet/claim', [FaucetController::class, 'claim'])
+        ->middleware('throttle:claim');
+
+    // Saques via FaucetPay
+    Route::get('/withdrawals', [WithdrawalController::class, 'index']);
+    Route::post('/withdraw', [WithdrawalController::class, 'store'])
+        ->middleware('throttle:withdraw');
 
     // Dice game routes
     Route::post('/dice/play', [DiceController::class, 'play']);
@@ -67,6 +82,8 @@ Route::middleware(['auth:sanctum', 'auth.admin'])->prefix('admin')->group(functi
     Route::get('/transactions', [AdminController::class, 'transactions']);
     Route::get('/dice-games', [AdminController::class, 'diceGames']);
     Route::get('/payouts', [AdminController::class, 'payouts']);
+    Route::get('/faucet/status', [AdminController::class, 'faucetStatus']);
+    Route::post('/faucet/recalculate-claim', [AdminController::class, 'recalculateClaim']);
     Route::get('/settings', [AdminController::class, 'settings']);
     Route::put('/settings/{settingId}', [AdminController::class, 'updateSetting']);
     Route::post('/admins', [AdminController::class, 'createAdmin']);

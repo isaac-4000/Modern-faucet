@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Admin;
+use App\Models\Setting;
+use App\Rules\TurnstileToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -17,11 +19,33 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        $ip = $request->ip();
+
+        // ----------------------------------------------- uma conta por IP
+        // Defesa contra criação de contas em massa, que é o ataque número um
+        // contra faucet: o bot cria 500 contas e reclama em todas.
+        //
+        // CUIDADO: no Brasil as operadoras usam CGNAT, então várias pessoas
+        // reais aparecem como o mesmo IP. O padrão é 3 contas por IP — suba
+        // o valor em Configurações se usuários legítimos forem bloqueados.
+        $maxAccountsPerIp = (int) Setting::getValue('max_accounts_per_ip', '3');
+
+        if ($maxAccountsPerIp > 0) {
+            $accountsFromThisIp = User::where('registration_ip', $ip)->count();
+
+            if ($accountsFromThisIp >= $maxAccountsPerIp) {
+                return response()->json([
+                    'message' => 'Já existem muitas contas criadas nesta conexão. Se você divide a internet com outras pessoas, fale com o suporte.',
+                ], 422);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'wallet_address' => 'required|string|unique:users',
             'email' => 'nullable|email|unique:users',
             'password' => 'required|string|min:6',
             'referred_by' => 'nullable|string|exists:users,referral_code',
+            'cf-turnstile-response' => ['required', new TurnstileToken($ip)],
         ]);
 
         if ($validator->fails()) {
@@ -37,6 +61,8 @@ class AuthController extends Controller
             'password' => $request->password,
             'referral_code' => Str::random(10),
             'referred_by' => $request->referred_by,
+            'registration_ip' => $ip,
+            'last_login_ip' => $ip,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -67,6 +93,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
+        $user->update(['last_login_ip' => $request->ip()]);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -80,9 +108,11 @@ class AuthController extends Controller
      */
     public function adminLogin(Request $request)
     {
+        // A porta do cofre pede captcha desde a primeira tentativa.
         $validator = Validator::make($request->all(), [
             'username' => 'required|string',
             'password' => 'required|string',
+            'cf-turnstile-response' => ['required', new TurnstileToken($request->ip())],
         ]);
 
         if ($validator->fails()) {

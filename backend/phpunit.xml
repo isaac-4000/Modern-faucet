@@ -29,5 +29,12 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!--
+            Captcha desligado nos testes. Assim os testes que não querem
+            testar o captcha não precisam fingir resposta da Cloudflare.
+            O FaucetProtectionTest liga o captcha de propósito, um a um.
+        -->
+        <env name="TURNSTILE_ENABLED" value="false"/>
+        <env name="FAUCETPAY_API_KEY" value="chave-falsa-de-teste"/>
     </php>
 </phpunit>

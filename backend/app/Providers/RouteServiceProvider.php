@@ -62,6 +62,35 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($identifier.'|'.$request->ip());
         });
 
+        /*
+         * Claim do faucet.
+         *
+         * O intervalo de 4 minutos já é o limitador de velocidade — ninguém
+         * reclama mais de 15 vezes por hora. Estes limites são a rede de
+         * segurança para quem tentar burlar o relógio ou rodar várias contas
+         * no mesmo IP.
+         *
+         * O limite por IP (60/hora) tolera até 4 contas no teto do intervalo.
+         * foi escolhido pensando em CGNAT: várias pessoas reais dividem o
+         * mesmo IP nas operadoras brasileiras. Se mesmo assim bloquear gente
+         * legítima, suba este número.
+         */
+        RateLimiter::for('claim', function (Request $request) {
+            $userId = $request->user()?->id ?? $request->ip();
+
+            return [
+                Limit::perMinute(5)->by('claim-user-'.$userId),
+                Limit::perHour(60)->by('claim-ip-'.$request->ip()),
+            ];
+        });
+
+        // Saque: 3 pedidos por hora por usuário. Um humano não precisa de mais.
+        RateLimiter::for('withdraw', function (Request $request) {
+            $userId = $request->user()?->id ?? $request->ip();
+
+            return Limit::perHour(3)->by('withdraw-'.$userId);
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

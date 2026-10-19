@@ -19,7 +19,10 @@ class DiceController extends Controller
     public function play(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'bet_amount' => 'required|numeric|min:0.00000001|max:0.00005000',
+            // Apostas em PONTOS (1 ponto = US$ 0,00001).
+            // Teto de 50 pontos = US$ 0,0005 por jogada: protege o caixa sem
+            // impedir quem quer apostar de verdade.
+            'bet_amount' => 'required|numeric|min:1|max:50',
             'target_number' => 'required|numeric|min:2|max:97',
             'client_seed' => 'required|string|max:255',
         ]);
@@ -82,6 +85,7 @@ class DiceController extends Controller
                 'user_id' => $user->id,
                 'type' => $isWin ? 'dice_win' : 'dice_loss',
                 'amount' => $netProfit,
+                'currency' => 'points',
                 'status' => 'completed',
             ]);
         });

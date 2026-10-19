@@ -9,6 +9,7 @@ use App\Models\Transaction;
 use App\Models\DiceGame;
 use App\Models\Payout;
 use App\Models\Setting;
+use App\Services\FaucetEconomy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -244,6 +245,75 @@ class AdminController extends Controller
         $admins = Admin::all();
 
         return response()->json($admins);
+    }
+
+    /**
+     * Painel da economia: quanto está saindo, quanto falta, e se a conta fecha.
+     *
+     * É a tela que você abre todo dia antes de tomar qualquer decisão.
+     */
+    public function faucetStatus(FaucetEconomy $economy)
+    {
+        $tank = $economy->tank();
+
+        $totalPaidOutBrl = (float) Payout::whereIn('status', ['pending', 'completed'])
+            ->sum('amount_brl');
+
+        $failedPayouts = Payout::where('status', 'failed')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get(['id', 'user_id', 'amount', 'currency', 'error_message', 'created_at']);
+
+        // Quantos usuários diferentes já sacaram hoje — um número alto, com
+        // poucos saques por usuário, é o sinal clássico de bot.
+        $distinctWithdrawersToday = Payout::whereIn('status', ['pending', 'completed'])
+            ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
+            ->distinct('user_id')
+            ->count('user_id');
+
+        return response()->json([
+            'tank' => $tank,
+            'total_paid_out_brl' => round($totalPaidOutBrl, 2),
+            'distinct_withdrawers_today' => $distinctWithdrawersToday,
+            'failed_payouts' => $failedPayouts,
+
+            // contas duplicadas — o indício mais forte de multi-conta
+            'suspicious_ips' => User::select('registration_ip')
+                ->selectRaw('COUNT(*) as total')
+                ->whereNotNull('registration_ip')
+                ->groupBy('registration_ip')
+                ->having('total', '>', 1)
+                ->orderByDesc('total')
+                ->limit(20)
+                ->get(),
+        ]);
+    }
+
+    /**
+     * Recalcula quantos pontos vale um claim, a partir do preço do DGB.
+     *
+     * Rode quando a moeda oscilar. Sem isso, se o DGB subir o seu custo em
+     * dólar sobe junto — e você só descobre no fim do mês.
+     */
+    public function recalculateClaim(Request $request, FaucetEconomy $economy)
+    {
+        $before = $economy->claimAmountPoints();
+        $after = $economy->recalculateClaimAmount();
+
+        Log::info('admin.claim_recalculado', [
+            'admin_id' => $request->user()?->id,
+            'de' => $before,
+            'para' => $after,
+            'dgb_usd_price' => $economy->dgbUsdPrice(),
+            'ip' => $request->ip(),
+        ]);
+
+        return response()->json([
+            'message' => 'Valor do claim recalculado.',
+            'antes' => $before,
+            'agora' => $after,
+            'tank' => $economy->tank(),
+        ]);
     }
 }
 
