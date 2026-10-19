@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -76,6 +77,21 @@ class AdminController extends Controller
         $oldBalance = $user->balance;
         $newBalance = $request->balance;
         $difference = $newBalance - $oldBalance;
+
+        // Auditoria: quem mudou o saldo de quem, de quanto para quanto, e de
+        // onde. Sem isso, um ajuste indevido é impossível de rastrear depois.
+        // TODO: quando a unidade mudar de BTC para pontos (ver plano de
+        // negócio, seção 3.4), revisar a validação de 'balance' abaixo.
+        Log::info('admin.balance_updated', [
+            'admin_id' => $request->user()?->id,
+            'admin_username' => $request->user()?->username,
+            'user_id' => $user->id,
+            'old_balance' => $oldBalance,
+            'new_balance' => $newBalance,
+            'difference' => $difference,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         DB::transaction(function () use ($user, $newBalance, $difference) {
             $user->update(['balance' => $newBalance]);
@@ -159,9 +175,20 @@ class AdminController extends Controller
         }
 
         $setting = Setting::findOrFail($settingId);
+        $oldValue = $setting->setting_value;
+
         $setting->update([
             'setting_value' => $request->setting_value,
             'description' => $request->description ?? $setting->description,
+        ]);
+
+        Log::info('admin.setting_updated', [
+            'admin_id' => $request->user()?->id,
+            'admin_username' => $request->user()?->username,
+            'setting_key' => $setting->setting_key,
+            'old_value' => $oldValue,
+            'new_value' => $setting->setting_value,
+            'ip' => $request->ip(),
         ]);
 
         return response()->json([
@@ -178,7 +205,9 @@ class AdminController extends Controller
         $validator = Validator::make($request->all(), [
             'username' => 'required|string|unique:admins',
             'email' => 'nullable|email|unique:admins',
-            'password' => 'required|string|min:6',
+            // Conta de administrador mexe no saldo de todo mundo: a senha
+            // precisa ser forte de verdade, não "123456".
+            'password' => 'required|string|min:12',
         ]);
 
         if ($validator->fails()) {
@@ -188,7 +217,17 @@ class AdminController extends Controller
         $admin = Admin::create([
             'username' => $request->username,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            // O model Admin tem o cast 'password' => 'hashed'. Passamos a
+            // senha em texto puro e deixamos o cast fazer o hash.
+            'password' => $request->password,
+        ]);
+
+        Log::info('admin.created', [
+            'created_by_admin_id' => $request->user()?->id,
+            'created_by_admin_username' => $request->user()?->username,
+            'new_admin_id' => $admin->id,
+            'new_admin_username' => $admin->username,
+            'ip' => $request->ip(),
         ]);
 
         return response()->json([

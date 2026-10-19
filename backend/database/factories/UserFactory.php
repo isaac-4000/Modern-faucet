@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -19,26 +18,34 @@ class UserFactory extends Factory
     /**
      * Define the model's default state.
      *
+     * ATENÇÃO: esta factory foi reescrita para refletir a tabela `users` real
+     * do projeto (wallet_address, balance, referral_code...). A factory padrão
+     * do Laravel usa `name` e `email_verified_at`, que não existem aqui — por
+     * isso qualquer teste que chamasse User::factory() estourava em SQL.
+     *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'wallet_address' => 'wallet-'.Str::lower(Str::random(20)),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            // O model User tem o cast 'password' => 'hashed': passamos a senha
+            // em texto puro e deixamos o cast fazer o hash.
+            'password' => static::$password ??= 'password',
+            'balance' => 0,
+            'referral_code' => Str::random(10),
             'remember_token' => Str::random(10),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Indicate that the model should have a specific balance.
      */
-    public function unverified(): static
+    public function withBalance(string $balance): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'balance' => $balance,
         ]);
     }
 }

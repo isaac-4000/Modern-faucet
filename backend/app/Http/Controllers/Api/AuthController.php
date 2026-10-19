@@ -31,7 +31,10 @@ class AuthController extends Controller
         $user = User::create([
             'wallet_address' => $request->wallet_address,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            // O model User tem o cast 'password' => 'hashed'. Passamos a senha
+            // em texto puro e deixamos o cast fazer o hash — assim eliminamos
+            // o risco de hash duplo, que deixaria o login impossível.
+            'password' => $request->password,
             'referral_code' => Str::random(10),
             'referred_by' => $request->referred_by,
         ]);
@@ -92,7 +95,10 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $token = $admin->createToken('admin_token')->plainTextToken;
+        // O segundo parâmetro é a habilidade do token. É ela que o middleware
+        // EnsureAuthenticatedAsAdmin confere na camada 2. Sem isso, qualquer
+        // token de admin cairia no 403.
+        $token = $admin->createToken('admin_token', ['admin'])->plainTextToken;
 
         return response()->json([
             'admin' => $admin,
@@ -105,7 +111,16 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        // Este endpoint é usado tanto por usuários quanto por administradores
+        // (o front-end chama o mesmo caminho nos dois casos). Por isso ele
+        // fica fora dos middlewares auth.user e auth.admin.
+        //
+        // Apagamos somente o token atual, nunca todos os tokens do dono.
+        $token = $request->user()?->currentAccessToken();
+
+        if ($token) {
+            $token->delete();
+        }
 
         return response()->json(['message' => 'Logged out successfully']);
     }
