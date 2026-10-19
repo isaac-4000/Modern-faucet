@@ -1,7 +1,7 @@
 # Plano de Negócio — Faucet de Criptomoedas
 
 **Para:** Isaac (`isaac-4000`)
-**Data:** 16 de outubro de 2026 (atualizado em 17/10/2026 — ver capítulo 17: a queda do FreeBitco.in)
+**Data:** 16 de outubro de 2026 (revisão geral em 18/10/2026 — ver seções 3 e 4: mudança para DGB, pontos atrelados ao dólar, torneira; e capítulo 17: a queda do FreeBitco.in)
 **Base:** números reais de mercado pesquisados nesta data. Fontes no final.
 **Pré-requisito de leitura:** este plano assume que você leu — e aceitou — o diagnóstico técnico do projeto.
 
@@ -17,22 +17,24 @@ Isso muda tudo. Você não está vendendo Bitcoin — você está comprando aten
 
 ```
 Receita por claim  =  impressões de anúncio × CPM ÷ 1000
-Custo por claim    =  sats pagos ao usuário × preço do BTC ÷ 100.000.000
+Custo por claim    =  pontos pagos ao usuário × US$ 0,00001
 
 Se a primeira linha for maior que a segunda, você tem negócio.
 Se for menor, você está pagando para trabalhar.
 ```
 
-**O número que você precisa decorar: 1 usuário ativo por dia vale cerca de US$ 0,40 por mês de lucro líquido.**
+**O número que você precisa decorar: 1 usuário ativo por dia vale cerca de US$ 0,60 por mês de lucro líquido.**
 
-Não US$ 4. Não US$ 40. **Quarenta centavos de dólar por mês.**
+Não US$ 6. Não US$ 60. **Sessenta centavos de dólar por mês.** (Era US$ 0,40 na versão em BTC — ver seção 3.1.)
 
 | Você quer faturar… | …então precisa de |
 |---|---|
-| US$ 100/mês (R$ 540) | ~250 usuários ativos/dia |
-| US$ 400/mês (R$ 2.160) | ~1.000 usuários ativos/dia |
-| 1 salário mínimo (~US$ 282) | ~710 usuários ativos/dia |
-| US$ 2.000/mês (R$ 10.800) | ~5.000 usuários ativos/dia |
+| US$ 100/mês (R$ 540) | ~165 usuários ativos/dia |
+| US$ 400/mês (R$ 2.160) | ~660 usuários ativos/dia |
+| 1 salário mínimo (~US$ 282) | ~465 usuários ativos/dia |
+| US$ 2.000/mês (R$ 10.800) | ~3.300 usuários ativos/dia |
+
+> **Atualização de 18/10/2026:** o projeto passa a pagar em **DGB**, com unidade interna em **pontos atrelados ao dólar**, ritmo de 4 minutos e teto diário de gasto. A moeda e os números mudaram — a lógica do negócio não. Detalhes na seção 3.
 
 **A boa notícia:** os custos são baixíssimos. US$ 10 a 15 por mês. Faucet é um dos poucos negócios de internet onde o custo fixo é quase zero.
 **A má notícia:** conseguir 1.000 pessoas voltando todo dia é *muito* difícil, leva de 9 a 18 meses, e é onde 95% dos faucets morrem.
@@ -65,92 +67,216 @@ Os faucets que sobrevivem tratam o claim como **isca de retenção** (o motivo d
 
 ## 3. A conta que decide tudo (economia unitária)
 
-### 3.1 Quanto você pode pagar por claim
+> **Revisão de 18/10/2026.** Esta seção foi reescrita depois de uma pesquisa de campo nos faucets que existem hoje. A conclusão mudou a moeda do projeto — e com ela, toda a matemática. A versão anterior, em BTC, está resumida em 3.1 para você entender o que mudou e por quê.
 
-Usando **BTC = US$ 82.000** (referência de outubro/2026) e assumindo **3 impressões de anúncio por claim** (banner topo + banner rodapé + sticky — o mínimo honesto):
+### 3.1 O que a versão anterior dizia — e onde ela errava
 
-| CPM real do seu tráfego | Receita por claim | **Payout máximo sustentável** |
-|---|---|---|
-| US$ 1,00 (tráfego Brasil ruim) | US$ 0,0030 | **3,66 sats** |
-| US$ 2,00 (Brasil bom / misto) | US$ 0,0060 | **7,32 sats** |
-| US$ 4,00 (misto com EUA/Europa) | US$ 0,0120 | **14,63 sats** |
-| US$ 8,00 (tráfego premium US/UK) | US$ 0,0240 | **29,27 sats** |
+O plano original foi escrito com **BTC a US$ 82.000** e payout de 5 sats por claim. A conta fechava no limite:
 
-Com **5 impressões por claim** (adicionando interstitial e pop-under), os números sobem ~66%: de 6 sats a 49 sats.
-
-### 3.2 O problema do seu projeto hoje
-
-A configuração atual do seu código paga **10 sats por claim, a cada 30 minutos**.
-
-- 10 sats = **US$ 0,0082**
-- Para empatar, você precisaria de **CPM de US$ 2,73** com 3 impressões
-- A faixa realista de CPM para tráfego majoritariamente brasileiro é **US$ 0,30 a 1,50**
-
-**Resultado: o projeto, como está configurado, perde dinheiro em cada claim.** Você pagaria ~1,8x mais do que recebe. Está no papel a receita certa, mas o número está calibrado para um faucet com 10x o seu tráfego e tráfego dos EUA.
-
-Isso não é erro do Manus — é que ninguém tinha feito essa conta antes de escolher o número. **Este é exatamente o tipo de decisão que só o dono do negócio pode tomar.**
-
-### 3.3 O valor de um usuário ativo
-
-Configuração calibrada para um faucet pequeno: **5 sats por claim, 8 claims por dia** por usuário.
-
-| Item | Valor/dia |
+| CPM do seu tráfego | Payout máximo sustentável (3 impressões) |
 |---|---|
-| Payout (5 sats × 8 claims) | −US$ 0,0328 |
-| Anúncio (24 impressões @ CPM US$ 1,50) | +US$ 0,0360 |
-| Offer wall (3% completam 1 oferta de US$ 1) | +US$ 0,0100 |
-| **Líquido por usuário ativo** | **+US$ 0,0132** |
+| US$ 1,00 | 3,66 sats |
+| US$ 2,00 | 7,32 sats |
 
-**US$ 0,0132 por dia = US$ 0,40 por mês por usuário ativo.**
+Com CPM brasileiro de US$ 0,30 a 1,50, **5 sats ficava no fio da navalha** — e o próprio plano avisava disso.
 
-Guarde esse número. Toda pergunta de negócio se responde com ele: "vale a pena pagar X reais de anúncio no Instagram?" → Se o custo de adquirir um usuário for maior que US$ 0,40, **não vale**, porque ele nunca se paga.
+O erro não estava na conta. Estava em **não ter verificado o que o faucet obriga o usuário a acumular antes de sacar**. Era aqui que o BTC matava o modelo:
 
-### 3.4 O risco que ninguém comenta: você paga em BTC e ganha em dólar
-
-Seus custos são em **Bitcoin**. Sua receita é em **dólar**.
-
-| Preço do BTC | Custo de 5 sats/claim | Payout diário com 1.000 DAU |
+| | BTC (FaucetPay) | DGB (FaucetPay) |
 |---|---|---|
-| US$ 82.000 (hoje) | US$ 0,0041 | US$ 32,80 |
-| US$ 120.000 | US$ 0,0060 | US$ 48,00 |
-| US$ 164.000 (2x) | US$ 0,0082 | **US$ 65,60** |
+| Taxa de saque | 1.000 sats (**US$ 0,81**) | 0,25 DGB (**US$ 0,00087**) |
+| **Mínimo para sacar** | **120.000 sats (US$ 97,76)** | **25 DGB (US$ 0,087)** |
+| Claims até o mínimo* | **24.440** | **22** |
 
-**Se o Bitcoin dobrar de preço, seu custo de payout dobra e sua receita de anúncio não muda nada.** Você passa de lucro para prejuízo da noite para o dia — sem ter feito nada de errado.
+\* considerando payout de US$ 0,004 por claim.
 
-**Requisito obrigatório de software:** o painel administrativo precisa permitir **mudar os sats por claim a qualquer momento, sem tocar em código**. Se você tiver que pedir para alguém alterar o programa toda vez que o BTC oscilar, você está refém. O código atual já tem uma tabela `settings` — ela precisa ser usada de verdade, com um botão na tela do admin.
+**24.440 claims contra 22.** É isso que a frase "taxas mais altas tornaram inviável a manutenção de uma faucet tradicional" significa. Não é a taxa — é o piso. Um usuário de faucet em BTC precisaria de mais de um ano reclamando todo dia pra ver a cor do dinheiro.
 
+### 3.2 Pesquisa de campo: o que os faucets de DGB pagam de verdade
+
+Referências coletadas em 17–18/10/2026. Cotações do dia: **BTC US$ 81.468 · DGB US$ 0,00349 · 1 sat = 0,2334 DGB**.
+
+| Faucet | Payout | Intervalo | **DGB/hora** | US$/hora |
+|---|---|---|---|---|
+| FaucetPepe | 0,04324 DGB | 10 s (teto 1.000/dia) | **15,56** | US$ 0,0543 |
+| **Viefaucet** (2 mi de usuários) | 65 tokens (US$ 0,00065) | 4 min | **2,82** | US$ 0,00975 |
+| TopFaucet | 0,14 DGB | 5 min | **1,68** | US$ 0,00586 |
+| Faucets menores | 0,00628 a 0,025 DGB | 5 min | 0,075 a 0,30 | — |
+| *FreeBitco.in (taxa final, 2025)* | *2 sats* | *1 h* | *0,467* | *US$ 0,00163* |
+
+**Três conclusões que nenhuma planilha te daria:**
+
+1. **O melhor faucet de DGB da lista tem ~4 usuários.** A página pública de "pagamentos recentes" do TopFaucet mostrava 10 saques em 8h44, de 4 carteiras distintas. Ele paga 3,6x mais que a média e é um deserto. **Ser o que mais paga não compra usuário — descoberta compra.**
+2. **O que paga 33x mais é uma máquina, não um faucet.** FaucetPepe libera um claim a cada 10 segundos com teto de 1.000 por dia. Nenhum humano clica 1.000 vezes por dia: o teto existe porque, sem ele, o site seria drenado em horas. Não é referência, é alarme.
+3. **A taxa do FreeBitco.in ainda é a melhor âncora psicológica disponível.** 2 sats/hora foi o número que milhões de pessoas aceitaram durante uma década. É uma régua testada pelo mercado — e é exatamente onde a sua configuração vai ficar.
+
+### 3.3 A configuração escolhida
+
+```
+Moeda:              DGB (DigiByte)
+Ritmo:              Um claim a cada 4 minutos (15 por hora)
+Payout:             0,03113 DGB por claim  =  US$ 0,000109
+Taxa horária:       0,467 DGB/hora         =  US$ 0,00163
+                    ↑ exatamente a taxa horária do FreeBitco.in
+Mínimo interno:     500 pontos (US$ 0,005) =  1,43 DGB
+Teto diário:        R$ 20 por dia (a "torneira")
+```
+
+Comparada ao mercado:
+
+| | DGB/hora | Você é |
+|---|---|---|
+| FaucetPepe | 15,56 | 1/33 |
+| Viefaucet | 2,82 | **1/6** |
+| TopFaucet | 1,68 | 1/3,6 |
+| **Você** | **0,467** | — |
+
+**Você começa pagando 1/6 do melhor faucet do mundo.** Não por escolha — por matemática. Veja 3.6.
+
+### 3.4 A unidade interna: ponto atrelado ao dólar
+
+O Viefaucet tem um token próprio onde **1 token = US$ 0,00001**, fixo. É a ideia mais inteligente daquele site e você vai copiar:
+
+```
+1 ponto = US$ 0,00001  (nunca muda)
+Claim   = 11 pontos    (= US$ 0,00011 = 0,03113 DGB na cotação de hoje)
+Mínimo  = 500 pontos   (= US$ 0,005 = 1,43 DGB)
+```
+
+**O que isso resolve:**
+
+- **Seu custo fica 100% em dólar.** O DGB pode subir ou cair: seu custo por claim não muda. É o fim do risco de volatilidade que a versão anterior deste plano chamava de "o risco que ninguém comenta".
+- **O usuário vê número redondo.** "500 pontos" em vez de "0,00000005". É a mesma mágica que faz o Viefaucet parecer generoso.
+- **Você pode trocar de moeda depois sem mexer em nada.** O ponto é a unidade de verdade; DGB é só a forma de pagar.
+
+**Uma regra, e é importante:** o ponto **nunca** pode ser comprado com dinheiro. Só ganho. Programa de fidelidade em que o usuário acumula pontos é tranquilo; no momento em que ele pode comprar pontos, o instrumento muda de natureza jurídica. **Nunca venda pontos.**
+
+### 3.5 A torneira: teto diário de pagamento
+
+O Viefaucet mostra o saldo da moeda como uma barra que vai drenando conforme os saques acontecem, até esvaziar — e então enchem de novo. Parece gamificação. **É controle de custo.**
+
+E você não precisa construir isso do zero: **a API v2 da FaucetPay tem um limite diário de pagamento em dólar configurado na própria chave.** Se o teto é atingido, a API devolve erro 429 e o pagamento simplesmente não sai [1](https://faucetpay.io/api-docs).
+
+| Teto diário | Payouts de 500 pontos possíveis | Sua perda máxima por dia |
+|---|---|---|
+| R$ 10 | 925 | R$ 10 |
+| **R$ 20** | **1.851** | **R$ 20** |
+| R$ 50 | 4.629 | R$ 50 |
+
+**Não importa quantos bots apareçam: você não consegue perder mais que o teto.** É a resposta mais limpa para a pergunta que a seção 4 deixava em aberto desde a primeira versão deste plano.
+
+A API também entrega, de graça, duas coisas que valem ouro: **chave de idempotência** (se o servidor tentar de novo, nunca paga duas vezes) e **campo de IP do destinatário** para cruzar com seu antifraude [1](https://faucetpay.io/api-docs).
+
+### 3.6 A escada de payout — como você chega no Viefaucet
+
+Você está 6x abaixo do melhor faucet do mundo. Dá para chegar, mas com **gatilho medido**, não no olho.
+
+**A regra:** só suba o payout quando a **receita medida por claim** for pelo menos **3 vezes** o payout atual. Assim o aumento se paga sozinho.
+
+| Fase | Receita medida por claim | Payout | Pontos | DGB/hora |
+|---|---|---|---|---|
+| **Lançamento** | US$ 0,00012 – 0,00018 | 0,031 DGB | 11 | 0,47 |
+| ~500 DAU | US$ 0,00035+ | 0,062 DGB | 22 | 0,93 |
+| ~2.000 DAU | US$ 0,00070+ | 0,125 DGB | 44 | 1,87 |
+| ~4.000 DAU | US$ 0,00130+ | 0,25 DGB | 88 | **3,73** ← passa o Viefaucet |
+
+**E tem um motivo para começar baixo que não é só dinheiro:** você sempre pode aumentar; **você nunca pode reduzir.** Cortar pagamento destrói confiança de um jeito que não tem volta — foi exatamente isso que matou o FreeBitco.in em novembro de 2025, quando reduziram os pontos pela metade sem avisar ninguém.
+
+### 3.7 O valor de um usuário ativo (recalculado)
+
+Usuário engajado: **25 claims/dia**, 3 impressões por claim, taxa de efetividade de 40% (site novo, adblock, frequency cap).
+
+| Item | Por mês |
+|---|---|
+| **Custo** — 750 claims × 0,03113 DGB | −US$ 0,082 |
+| **Anúncios** — 750 × 3 = 2.250 impressões brutas → 900 efetivas @ CPM US$ 0,60 | +US$ 0,540 |
+| **Offer wall** — participação conservadora | +US$ 0,150 |
+| **Líquido por usuário ativo** | **+US$ 0,61** |
+
+**1 usuário ativo por dia = ~US$ 0,60 por mês.** (A versão em BTC dava US$ 0,40 — a folga de CPM do DGB comprou 50% a mais.)
+
+| Você quer faturar… | …precisa de |
+|---|---|
+| US$ 100/mês (R$ 540) | ~165 usuários ativos/dia |
+| US$ 400/mês (R$ 2.160) | ~660 usuários ativos/dia |
+| 1 salário mínimo (~US$ 282) | ~465 usuários ativos/dia |
+| US$ 2.000/mês (R$ 10.800) | ~3.300 usuários ativos/dia |
+
+**Custo de payout com 1.000 DAU:** 750.000 claims/mês × 0,03113 DGB = 23.347 DGB = **US$ 81/mês ≈ R$ 440/mês.**
+
+### 3.8 Por que a escolha do intervalo é uma decisão de segurança
+
+Com intervalo de 4 minutos, uma conta consegue no máximo 360 claims por dia:
+
+```
+360 × 0,03113 DGB = 11,2 DGB/dia = US$ 0,039 por conta por dia
+```
+
+**O máximo absoluto que uma única conta consegue extrair de você é 4 centavos de dólar por dia.** O intervalo é o seu melhor antifraude — muito melhor do que o limite de saque, porque ele limita a *velocidade*, não só o *destino*.
+
+O FaucetPepe errou exatamente aqui: intervalo de 10 segundos libera 8.640 claims/dia por conta (336 DGB), e foi por isso que precisaram inventar um teto de 1.000 — um remendo para uma decisão errada.
+
+### 3.9 Requisitos de software que esta seção cria
+
+1. **Unidade interna em pontos, não em DGB.** O banco guarda pontos; a conversão para DGB acontece só na hora do saque.
+2. **Taxa de conversão editável no painel admin**, sem tocar em código. Você vai usar toda semana.
+3. **Intervalo e payout editáveis no painel admin** (a tabela `settings` já existe no projeto — precisa ser usada de verdade).
+4. **Teto diário em reais**, aplicado antes de chamar a API da FaucetPay, com a barra da torneira visível para o usuário.
+5. **Chave de idempotência** em todo pagamento, e **IP do usuário** enviado em toda chamada de saque.
+6. **A moeda não pode estar cravada no código.** Se o DGB der problema, trocar para LTC tem que ser uma linha de configuração.
+
+---
 ---
 
 ## 4. O inimigo nº 1: fraude
 
-Aqui está a conta que mata faucets novamente. Preste atenção nela.
+> **Revisão de 18/10/2026.** A mudança para DGB e a descoberta do teto diário da FaucetPay mudaram esta seção. O ataque continua existindo — mas agora existe um limite matemático para o dano.
 
-Um atacante baixa um bot, contrata um serviço de resolução de captcha e roda 1.000 claims:
+### 4.1 A conta do ataque, refeita com a nova configuração
 
-| Item | Valor |
-|---|---|
-| Extraído do seu faucet (1.000 × 10 sats) | **US$ 8,20** |
-| Custo do captcha-solver (US$ 0,60 por 1.000) | US$ 0,60 |
-| **Lucro do atacante** | **US$ 7,60 — retorno de 13,7x** |
-| Sua receita de anúncio nesse tráfego | ~US$ 0,00 (redes filtram tráfego de bot) |
-| **Seu prejuízo** | **US$ 8,20** |
+Um atacante baixa um bot, contrata um serviço de resolução de captcha e roda **1.000 claims** na configuração nova (0,03113 DGB = US$ 0,000109 por claim):
 
-Escalar para 10.000 claims em uma noite: **US$ 82 de prejuízo direto**, saindo do seu bolso, com receita zero.
+| Item | Antes (10 sats) | Agora (0,03113 DGB) |
+|---|---|---|
+| Extraído do seu faucet | US$ 8,20 | **US$ 0,11** |
+| Custo do captcha-solver (US$ 0,60 / 1.000) | US$ 0,60 | US$ 0,60 |
+| **Lucro do atacante** | **US$ 7,60 (13,7x)** | **−US$ 0,49 — prejuízo** |
+| Sua receita de anúncio nesse tráfego | ~US$ 0,00 | ~US$ 0,00 |
+| **Seu prejuízo** | **US$ 8,20** | **US$ 0,11** |
 
-Não é hipótese. É rotina. Serviços de solução de captcha anunciam a US$ 0,60 por mil resoluções — e resolvem Turnstile, reCAPTCHA e hCaptcha. **Qualquer captcha é derrotável se o atacante estiver disposto a gastar centavos.**
+**Essa é a mudança mais importante de toda esta revisão.** No payout antigo, o ataque dava 13,7x de retorno para o atacante — era um negócio melhor que o seu. No payout novo, **mil claims roubados valem menos que o captcha que o atacante pagou para resolvê-los.** O ataque deixou de ser lucrativo antes de qualquer defesa.
 
-### As camadas de defesa (na ordem de retorno)
+Escalar para 10.000 claims em uma noite: **US$ 1,09 de prejuízo**, contra US$ 82 na configuração antiga.
 
-1. **Threshold de saque alto o suficiente para dar tempo de detectar.** Se o usuário só pode sacar com 10.000 sats acumulados, o bot precisa trabalhar por dias antes de levar qualquer coisa — e nesse tempo você o vê. **Esta é a defesa mais eficaz e mais barata que existe.**
-2. **Um cadastro por IP / por dispositivo.** Bloqueia o ataque amador.
-3. **Captcha invisível.** Cloudflare Turnstile é gratuito e sem limite de requisições. hCaptcha e reCAPTCHA têm nível grátis de 10.000/mês. Não resolve sozinho, mas encarece o ataque.
-4. **Rate limit agressivo nas rotas de claim.** O projeto hoje permite 60 requisições por minuto por IP. Para claim, isso deveria ser "1 por intervalo de claim, ponto".
-5. **Detecção de padrão.** Mesma carteira de destino em vários cadastros; claims em intervalos exatos de relógio; velocidade impossível para um humano com tela. Um relatório semanal no painel admin resolve.
-6. **Cloudflare na frente de tudo (grátis).** Filtra uma camada antes de chegar no seu servidor.
-7. **Validação da carteira de destino no FaucetPay.** Uma carteira por usuário; punir reuso.
+Não é hipótese. É rotina. Serviços de solução de captcha anunciam a US$ 0,60 por mil resoluções e resolvem Turnstile, reCAPTCHA e hCaptcha. **Qualquer captcha é derrotável se o atacante estiver disposto a gastar centavos — a questão é se o que ele leva vale os centavos.**
 
-**Defesa não é opcional.** Sem ela, você não está abrindo um negócio — está abrindo um caixa eletrônico.
+### 4.2 A defesa nº 1 agora é outra: o teto diário
 
+A versão anterior deste plano dizia que a defesa mais eficaz era um saque mínimo alto. **Com o DGB isso mudou**, por dois motivos: o saque mínimo pode (e deve) ser baixo, e a FaucetPay passou a oferecer algo melhor.
+
+**A API v2 da FaucetPay aceita um limite diário de pagamento em dólar configurado na própria chave.** Atingido o teto, ela devolve erro 429 e o pagamento não sai [1](https://faucetpay.io/api-docs).
+
+```
+Teto de R$ 20/dia  →  não existe cenário em que você perca mais que R$ 20 por dia.
+                      Nem com 100 mil bots. Nem dormindo.
+```
+
+Isso transforma fraude de **risco existencial** em **risco contabilizável**. Você decide o número no domingo, e o número é lei.
+
+### 4.3 As camadas de defesa (na ordem de retorno)
+
+1. **Teto diário de pagamento (a torneira).** Limite em reais na chave da API. **É a única defesa que limita o dano independentemente de tudo falhar.** Configure no dia 1.
+2. **Intervalo de 4 minutos entre claims.** Limita a *velocidade* de extração a ~US$ 0,039 por conta por dia. Mais eficaz que aumentar o saque mínimo, e não custa nada em experiência do usuário.
+3. **Um cadastro por IP / por dispositivo.** Bloqueia o ataque amador.
+4. **Captcha invisível.** Cloudflare Turnstile é gratuito e sem limite de requisições. hCaptcha e reCAPTCHA têm nível grátis de 10.000/mês. Não resolve sozinho, mas encarece o ataque — e no payout novo, encarecer já é suficiente para matar o incentivo.
+5. **Rate limit agressivo nas rotas de claim.** O projeto hoje permite 60 requisições por minuto por IP. Para claim, isso deveria ser "1 por intervalo de claim, ponto".
+6. **Detecção de padrão.** Mesma carteira de destino em vários cadastros; claims em intervalos exatos de relógio; velocidade impossível para um humano com tela. Um relatório semanal no painel admin resolve.
+7. **Cloudflare na frente de tudo (grátis).** Filtra uma camada antes de chegar no seu servidor.
+8. **Validação da carteira de destino no FaucetPay.** Uma carteira por usuário; punir reuso.
+
+**Defesa não é opcional.** Sem ela, você não está abrindo um negócio — está abrindo um caixa eletrônico. Mas note a diferença desta revisão: **a ordem mudou.** Antes você dependia de detectar o bot a tempo. Agora você depende de um número que você mesmo escolheu, e que funciona mesmo se você estiver dormindo.
+
+---
 ---
 
 ## 5. Números reais de mercado (outubro/2026)
@@ -365,7 +491,7 @@ Sem escrever código. Sem gastar dinheiro além do domínio.
 
 - [ ] **Comprar o domínio HOJE.** A-ADS exige 3 meses de idade do domínio. Cada dia de atraso é um dia a mais sem a única rede que paga diariamente e não exige CNPJ. *(≈ US$ 12/ano — o melhor investimento do projeto)*
 - [ ] **Decidir o veredito do jogo de dados** (seção 7). Recomendação: remover a aposta.
-- [ ] **Escrever num papel:** qual moeda você vai distribuir. BTC é o chamariz, mas LTC/DOGE/TRX têm apelo e custo menor. FaucetPay suporta várias — começar com 2 ou 3 amplia o público sem custo extra.
+- [x] **Moeda definida: DGB.** Decisão tomada em 18/10/2026 com base na pesquisa de campo da seção 3.2. Motivo: mínimo de saque de US$ 0,087 contra US$ 97,76 do BTC. **Plano B registrado:** se o DGB perder liquidez ou for deslistado, migrar para LTC (o código não pode ter a moeda cravada — seção 3.9).
 - [ ] **Falar com um advogado** (~1 consulta) especificamente sobre: faucet sem aposta, é permitido? Precisa de autorização? Se não puder pagar, pesquise você mesmo — mas registre a dúvida e resolva antes do lançamento.
 - [ ] **Falar com um contador** sobre CNPJ/MEI e tributação de receita do exterior.
 - [ ] **Criar conta no FaucetPay** e entender a API de pagamento.
@@ -376,9 +502,11 @@ Sem escrever código. Sem gastar dinheiro além do domínio.
 - [ ] **Corrigir a falha de segurança do admin** (qualquer usuário hoje pode se dar saldo infinito). **Inadiável.** Sem isso o site não pode receber uma única pessoa.
 - [ ] Deploy real: backend Laravel + MySQL num servidor, HTTPS, domínio apontado.
 - [ ] Cloudflare na frente de tudo. Turnstile no cadastro e no claim.
-- [ ] Integração FaucetPay para saque — **isto substitui a integração com blockchain**, que é a parte que você achava que ia ser impossível.
-- [ ] Calibrar os sats por claim para um número sustentável (comece em **5 sats**) e criar a tela do admin para ajustar.
-- [ ] Saque mínimo alto (10.000 sats) como defesa antifraude.
+- [ ] Integração FaucetPay para saque — **isto substitui a integração com blockchain**, que é a parte que você achava que ia ser impossível. Já criar a chave de API **com teto diário em reais** (seção 4.2).
+- [ ] Implementar a **unidade interna em pontos** (1 ponto = US$ 0,00001) e a conversão para DGB na hora do saque. Payout inicial: **11 pontos**.
+- [ ] Configurar **0,03113 DGB por claim a cada 4 minutos** e criar a tela do admin para ajustar payout, intervalo e taxa de conversão sem tocar em código.
+- [ ] **Barra da torneira** na home mostrando o teto diário drenando.
+- [ ] Mínimo de saque de **500 pontos (US$ 0,005)** — o intervalo de 4 minutos é a defesa principal; o teto diário é a rede de segurança.
 - [ ] Política de privacidade publicada.
 
 **Custo: ~US$ 18 (domínio proporcional + hospedagem).**
@@ -422,48 +550,75 @@ Sem escrever código. Sem gastar dinheiro além do domínio.
 
 ## 13. Projeções financeiras: 3 cenários
 
-Premissas: BTC US$ 82.000 · 8 claims/usuário/dia · 3 impressões/claim · offer wall a 3% de participação.
+> **Revisão de 18/10/2026.** Todos os números refeitos com a configuração DGB. Premissas na caixa abaixo — se elas estiverem erradas, os números estão errados.
+
+**Premissas desta projeção**
+
+| Premissa | Valor | O que pode derrubar |
+|---|---|---|
+| Payout | 0,03113 DGB (US$ 0,000109) | — (é você quem controla) |
+| Claims por usuário ativo por dia | 25 | Se for 10, corte o líquido pela metade |
+| Impressões por claim | 3 | Depende do layout |
+| Efetividade das impressões | 40% | Adblock + frequency cap; pode cair a 25% |
+| CPM cenário B | US$ 0,60 | Tráfego novo começa em US$ 0,30 |
+| Offer wall por usuário/mês | US$ 0,15 (B) / US$ 0,08 (A) | Depende da oferta disponível |
 
 ### Cenário A — Hobby / portfólio (o mais provável se você trabalhar pouco)
+
+CPM US$ 0,40 · offer wall fraco · **líquido ≈ US$ 0,36 por DAU/mês**
 
 | | Mês 3 | Mês 6 | Mês 12 |
 |---|---|---|---|
 | Usuários ativos/dia | 50 | 150 | 300 |
-| Receita bruta | US$ 15 | US$ 45 | US$ 120 |
-| Payout | US$ 8 | US$ 25 | US$ 49 |
+| Receita bruta | US$ 22 | US$ 66 | US$ 132 |
+| Payout | US$ 4 | US$ 12 | US$ 25 |
 | Custos | US$ 8 | US$ 8 | US$ 8 |
-| **Lucro líquido** | **−US$ 1** | **+US$ 12** | **+US$ 63** |
+| **Lucro líquido** | **+US$ 10** | **+US$ 46** | **+US$ 99** |
 
-**Leitura honesta:** R$ 340/mês no fim do primeiro ano. É um hobby que se paga. **E isso não é fracasso** — você teria um produto real, funcionando, que você construiu. É a base para decidir se vale escalar.
+**Leitura honesta:** R$ 535/mês no fim do primeiro ano. É um hobby que se paga. **E isso não é fracasso** — você teria um produto real, funcionando, que você construiu. É a base para decidir se vale escalar.
 
 ### Cenário B — Renda extra (a meta que faz sentido)
+
+CPM US$ 0,60 · offer wall ativo · **líquido ≈ US$ 0,61 por DAU/mês**
 
 | | Mês 3 | Mês 6 | Mês 12 |
 |---|---|---|---|
 | Usuários ativos/dia | 100 | 500 | 1.000 |
-| Anúncios | US$ 36 | US$ 180 | US$ 360 |
-| Shortlink | US$ 12 | US$ 60 | US$ 120 |
-| Offer wall | US$ 10 | US$ 50 | US$ 100 |
-| **Receita bruta** | **US$ 58** | **US$ 290** | **US$ 580** |
-| Payout (5 sats) | US$ 33 | US$ 197 | US$ 393 |
+| Anúncios | US$ 54 | US$ 270 | US$ 540 |
+| Offer wall | US$ 15 | US$ 75 | US$ 150 |
+| **Receita bruta** | **US$ 69** | **US$ 345** | **US$ 690** |
+| Payout (0,03113 DGB) | US$ 8 | US$ 41 | US$ 82 |
 | Custos | US$ 8 | US$ 8 | US$ 8 |
-| **Lucro líquido** | **+US$ 17** | **+US$ 85** | **+US$ 179** |
+| **Lucro líquido** | **+US$ 53** | **+US$ 296** | **+US$ 600** |
 
-**Leitura:** ~US$ 180/mês (R$ 970) no fim do ano, trabalhando de 8 a 12 horas por semana. Exige os 12 meses do plano executados com disciplina, especialmente na parte de aquisição.
+**Leitura:** ~US$ 600/mês (R$ 3.240) no fim do ano, trabalhando de 8 a 12 horas por semana. Exige os 12 meses do plano executados com disciplina, especialmente na parte de aquisição.
+
+**Por que este número é ~3,3x melhor que o da versão em BTC?** Não é mágica: o payout caiu de US$ 393 para US$ 82 por mês em 1.000 DAU. A receita é praticamente a mesma. **Toda a diferença é o custo da moeda.**
 
 ### Cenário C — Negócio real (improvável sozinho, e é bom você saber)
 
 | | Mês 12 | Mês 24 |
 |---|---|---|
 | Usuários ativos/dia | 5.000 | 20.000 |
-| Receita bruta | ~US$ 2.900 | ~US$ 11.600 |
+| Receita bruta | ~US$ 3.450 | ~US$ 13.800 |
+| Payout | US$ 410 | US$ 1.640 |
 | Custo incluindo equipe parcial | US$ 1.200 | US$ 5.000 |
-| **Lucro** | **~US$ 1.700** | **~US$ 6.600** |
+| **Lucro** | **~US$ 1.840** | **~US$ 7.160** |
 
 Exige equipe, capital de giro de milhares de dólares, presença em várias geos, meses de marketing intenso e guerra antifraude em tempo integral. **Não é o seu cenário hoje.** Está aqui para você saber que o teto existe — e enxergar quando (se) você chegar lá.
 
----
+### Teste de sensibilidade (faça este teste antes de acreditar em qualquer número acima)
 
+| Se a efetividade das impressões for… | …e o CPM for… | Líquido por DAU/mês |
+|---|---|---|
+| 40% | US$ 0,60 | US$ 0,61 |
+| 40% | US$ 0,30 | US$ 0,34 |
+| 25% | US$ 0,60 | US$ 0,41 |
+| **25%** | **US$ 0,30** | **US$ 0,20** ← o pior caso honesto |
+
+**Mesmo no pior caso, você não perde dinheiro.** Essa é a diferença que o DGB comprou: na configuração antiga em BTC, o pior caso era prejuízo por claim.
+
+---
 ## 14. Critérios de encerramento (leia antes de começar)
 
 Decida **agora**, com a cabeça fria, quando você vai desligar. Isso evita arrastar um projeto morto por dois anos movido por esperança.
@@ -493,28 +648,33 @@ Nesta ordem. Nada de código ainda.
 |---|---|---|---|
 | 1 | **Comprar o domínio** | A-ADS exige 3 meses de idade. É o gargalo real. | US$ 12/ano |
 | 2 | **Decidir o destino do jogo de dados** | Aposta = R$ 30 milhões de outorga. Remover a aposta. | R$ 0 |
-| 3 | **Abrir conta no FaucetPay** | É a sua via de pagamento. Sem ela não existe faucet. | R$ 0 |
-| 4 | **Consultar um advogado** (1 conversa) | Trocar incerteza jurídica por informação. | variável |
-| 5 | **Consultar um contador** | CNPJ? Receita do exterior? Como declarar? | variável |
-| 6 | **Anotar num papel**: meta de usuários para 12 meses | Sem número, não há como avaliar. | R$ 0 |
-| 7 | **Só então** pedir a correção técnica | Código é consequência da decisão, não o contrário. | — |
+| 3 | **Abrir conta no FaucetPay** e criar a chave de API já com **teto diário** | É a sua via de pagamento — e o teto é a sua defesa nº 1 contra fraude (seção 4.2). | R$ 0 |
+| 4 | **Confirmar que o DGB está disponível para você**: você consegue comprar com Pix e o par DGB/USDT tem volume? | Você vai repor estoque toda semana. Se a liquidez secar, muda para LTC (seção 3.9). | R$ 0 |
+| 5 | **Escolher o nome do ponto** (a unidade interna de US$ 0,00001) | Vai aparecer em cada tela. Não pode ter "coin", "token" ou "cripto" no nome — é ponto de fidelidade, e ele **nunca é vendido**. | R$ 0 |
+| 6 | **Definir o teto diário em reais** e anotar | R$ 20 é um bom começo. É o número que limita a sua perda máxima por dia. | R$ 0 |
+| 7 | **Consultar um advogado** (1 conversa) | Trocar incerteza jurídica por informação. Leve a seção 8 e pergunte também sobre o sistema de pontos. | variável |
+| 8 | **Consultar um contador** | CNPJ? Receita do exterior? Como declarar quem paga em cripto? | variável |
+| 9 | **Anotar num papel**: meta de usuários para 12 meses | Sem número, não há como avaliar. | R$ 0 |
+| 10 | **Só então** pedir a correção técnica | Código é consequência da decisão, não o contrário. | — |
+
+**Decisões já tomadas (não voltem para a mesa sem número novo):** moeda DGB · 0,03113 DGB por claim · intervalo de 4 minutos · mínimo de 500 pontos · teto diário R$ 20 · payout ancorado em dólar e recalculado toda semana.
 
 ---
 
 ## 16. Resumo final — a verdade em 10 linhas
 
 1. Faucet é **negócio de mídia**, não de criptomoeda.
-2. Você compra atenção com sats e revende com anúncio.
-3. Meta é magra: **US$ 0,006 por claim** de receita.
-4. **5 sats por claim** é o teto realista para começar. 10 sats dá prejuízo.
-5. **1 usuário ativo = ~US$ 0,40/mês.** Para R$ 2.000/mês: ~1.000 pessoas voltando todo dia.
+2. Você compra atenção com pontos e revende com anúncio.
+3. **Em BTC o modelo não fecha: o mínimo de saque é US$ 98 — 24 mil claims.** Em DGB é US$ 0,09.
+4. **0,03113 DGB por claim a cada 4 minutos** (11 pontos). É 1/6 do Viefaucet e igual à taxa final do FreeBitco.in.
+5. **1 usuário ativo = ~US$ 0,60/mês.** Para R$ 2.000/mês: ~660 pessoas voltando todo dia.
 6. **Offer wall é onde está o dinheiro.** O claim é a isca.
-7. **Fraude é o inimigo nº 1** e a defesa mais eficaz é um saque mínimo alto.
+7. **Fraude é o inimigo nº 1** — mas com o teto diário da FaucetPay, sua perda máxima é um número que você escolhe.
 8. **O jogo de aposta precisa sair por causa da Lei 14.790/2023** (R$ 30 milhões de outorga).
-9. **Conquistar usuários é mais difícil que programar.** Sem 1.000 DAU, o plano é lindo e vazio.
+9. **Conquistar usuários é mais difícil que programar.** O melhor faucet de DGB da pesquisa tem 4 usuários — pagar mais não compra ninguém.
 10. **Custos são baixos (US$ 8/mês). O que é caro é o seu tempo, e ele é finito.**
 
-**O caminho que faz sentido:** construir, lançar em 3 meses, operar por 12, avaliar com número na mão. Se chegar a US$ 150–200/mês líquido, você terá algo raro — um negócio real, construído por você, que quase ninguém consegue tirar do papel. Se não chegar, você terá aprendido programação, produto, marketing e operação, com US$ 100 de prejuízo. **Os dois resultados são bons negócios.**
+**O caminho que faz sentido:** construir, lançar em 3 meses, operar por 12, avaliar com número na mão. Se chegar a US$ 300–600/mês líquido, você terá algo raro — um negócio real, construído por você, que quase ninguém consegue tirar do papel. Se não chegar, você terá aprendido programação, produto, marketing e operação, com US$ 100 de prejuízo. **Os dois resultados são bons negócios.**
 
 O ruim é o terceiro caminho: nunca decidir, nunca lançar e nunca encerrar. É o que faz uma pasta chamada "faucet" ficar parada por dois anos no seu GitHub.
 
@@ -607,7 +767,7 @@ Um gigante de 12 anos caiu por elas. A única vantagem que você tem sobre ele �
 
 ---
 
-## 18. Fontes consultadas (16/10/2026, atualizado 17/10/2026)
+## 18. Fontes consultadas (16 a 18/10/2026)
 
 **Mercado e economia de faucet**
 - https://readyfaucet.com/blog/how-to-make-money-with-crypto-faucets — modelo de negócio, US$ 50–100 primeiro mês, meta US$ 500–1.000
@@ -663,6 +823,23 @@ Um gigante de 12 anos caiu por elas. A única vantagem que você tem sobre ele �
 - https://www.investing.com/news/cryptocurrency-news/binancelisted-fun-token-to-tap-from-freebitcoins-41-million-users-through-premium-membership-program-launch-2409149 — 41 milhões de usuários, 52 milhões de visitas/mês
 - https://medium.com/@ethan_l/freebitco-in-earning-guide-546a66dc0389 — comissões de indicação (50% claim, 0,4% aposta, 25% juros)
 - https://elspethrooney.github.io/2020/10/27/a_great_review_of_freebitcoin.html — 1 ponto = 1 satoshi, mínimo de 100 mil pontos para trocar
+
+**Moeda, microcarteira e economia (capítulos 3 e 4)** — verificado em 17–18/10/2026
+- https://faucetpay.io/fees — tabela oficial: taxa e mínimo de saque por moeda (BTC 0,0012 mínimo; DGB 25 mínimo; Direct Transfer grátis)
+- https://faucetpay.io/api-docs — API v2 de pagamento: sem mínimo de envio, teto diário em dólar por chave, chave de idempotência, campo de IP
+- https://hackernoon.com/how-to-build-automatic-crypto-payouts-with-the-faucetpay-api — teto diário, chaves com menor privilégio, amount em menor unidade
+- https://faucetpay.io/help/api/sending-payouts — fluxo de pagamento do faucet para o usuário
+- https://faq.faucetpay.io/knowledge-base/what-currencies-do-you-work-with/ — moedas suportadas (inclui DGB)
+- https://www.coingecko.com/en/coins/bitcoin — BTC US$ 81.468
+- https://www.coingecko.com/en/coins/litecoin — LTC US$ 58,75 · US$ 4,57 bi de valor de mercado
+- https://www.coingecko.com/en/coins/dash — DASH US$ 48,35 · US$ 622 mi
+- https://www.coingecko.com/en/coins/digibyte — DGB ~US$ 0,00349 · US$ 64 mi · ranking #384
+- https://www.coinlore.com/coin/digibyte — volume do par DGB/USDT na Binance (~US$ 58 mil/dia)
+
+**Pesquisa de campo em faucets de DGB (capítulo 3.2)** — visitados em 18/10/2026
+- https://viefaucet.com — 65 tokens (US$ 0,00065) a cada 4 min; token próprio de US$ 0,00001; mínimo de saque 500 tokens (US$ 0,005)
+- https://dgb.topfaucet.top — 0,14 DGB a cada 5 min; reCAPTCHA; exige FaucetPay; lista pública de pagamentos recentes
+- https://faucetpepe.xyz — 0,043 DGB a cada 10 s com teto de 1.000 claims/dia
 
 **O caso FreeBitco.in (capítulo 17)** — verificado em 17/10/2026
 - https://thebitcoinmanual.com/articles/the-fall-of-freebitco-in/ — linha do tempo completa, multas da KSA, crise de saques
